@@ -2,7 +2,13 @@
 
 If you're logged in as a player but don't see any lots on the Browse page, follow these steps.
 
-## 1. Call the Debug Endpoint
+## 1. Sync Now (Easiest)
+
+On the **Browse** page, when no lots are shown, click the **"Sync Now"** button. This fetches auction data from AuctionMethod and loads it into the database. No command line needed.
+
+You can also use the **Sync Now** button on the Operator Dashboard at `/dashboard`.
+
+## 2. Call the Debug Endpoint
 
 Visit: **`https://your-app.vercel.app/api/debug`** (or `http://localhost:3000/api/debug` locally)
 
@@ -19,7 +25,10 @@ This returns:
   curl -X POST "https://your-app.vercel.app/api/sync" \
     -H "Authorization: Bearer YOUR_CRON_SECRET"
   ```
-- **AuctionMethod API credentials missing.** Ensure `AM_DOMAIN`, `AM_EMAIL`, `AM_PASSWORD` are set in Vercel.
+- **AuctionMethod API credentials missing.** In Vercel, set:
+  - `AM_DOMAIN` = your auction subdomain only, e.g. `dpwapi.auctionmethod.com` (no `https://`)
+  - `AM_EMAIL` = your AuctionMethod API user email
+  - `AM_PASSWORD` = your AuctionMethod API user password
 - **Sync is failing.** Check Vercel logs for the `/api/sync` cron run.
 
 ### Auctions exist but `eligibleAuctionsCount` is 0

@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import { AMItem, AMAuction } from "@/types/auction";
 import LotGrid from "@/components/game/LotGrid";
 import Tabs from "@/components/ui/Tabs";
-import { Search, Clock, Grid3X3, Flame } from "lucide-react";
+import Button from "@/components/ui/Button";
+import { Search, Clock, Grid3X3, Flame, RefreshCw } from "lucide-react";
 
 type BrowseTab = "all" | "closing" | "category" | "hot";
 
@@ -20,57 +21,78 @@ export default function BrowsePage() {
   const [auctions, setAuctions] = useState<AMAuction[]>([]);
   const [items, setItems] = useState<AMItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAuction, setSelectedAuction] = useState<number | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const supabase = createClient();
-      const now = new Date().toISOString();
+  const fetchData = async () => {
+    setLoading(true);
+    const supabase = createClient();
+    const now = new Date().toISOString();
 
-      // Only published auctions where bidding has not yet started (start_time in future)
-      const { data: auctionsData } = await supabase
-        .from("am_auctions")
+    const { data: auctionsData } = await supabase
+      .from("am_auctions")
+      .select("*")
+      .eq("published", true)
+      .gt("start_time", now)
+      .order("start_time", { ascending: true });
+
+    const auctionsList = (auctionsData as AMAuction[]) || [];
+    setAuctions(auctionsList);
+
+    const eligibleAuctionIds = auctionsList.map((a) => a.am_auction_id);
+
+    let itemsData: AMItem[] = [];
+    const auctionIdsToFetch =
+      selectedAuction && eligibleAuctionIds.includes(selectedAuction)
+        ? [selectedAuction]
+        : eligibleAuctionIds;
+
+    if (auctionIdsToFetch.length > 0) {
+      let query = supabase
+        .from("am_items")
         .select("*")
-        .eq("published", true)
-        .gt("start_time", now)
-        .order("start_time", { ascending: true });
+        .eq("status", "open")
+        .in("am_auction_id", auctionIdsToFetch);
 
-      const auctionsList = (auctionsData as AMAuction[]) || [];
-      setAuctions(auctionsList);
-
-      const eligibleAuctionIds = auctionsList.map((a) => a.am_auction_id);
-
-      let itemsData: AMItem[] = [];
-      const auctionIdsToFetch =
-        selectedAuction && eligibleAuctionIds.includes(selectedAuction)
-          ? [selectedAuction]
-          : eligibleAuctionIds;
-
-      if (auctionIdsToFetch.length > 0) {
-        let query = supabase
-          .from("am_items")
-          .select("*")
-          .eq("status", "open")
-          .in("am_auction_id", auctionIdsToFetch);
-
-        if (activeTab === "closing") {
-          query = query.order("closes_at", { ascending: true }).limit(50);
-        } else {
-          query = query.order("created_at", { ascending: false }).limit(100);
-        }
-
-        const { data } = await query;
-        itemsData = (data as AMItem[]) || [];
+      if (activeTab === "closing") {
+        query = query.order("closes_at", { ascending: true }).limit(50);
+      } else {
+        query = query.order("created_at", { ascending: false }).limit(100);
       }
 
-      setItems(itemsData);
-      setLoading(false);
-    };
+      const { data } = await query;
+      itemsData = (data as AMItem[]) || [];
+    }
 
+    setItems(itemsData);
+    setLoading(false);
+  };
+
+  useEffect(() => {
     fetchData();
   }, [activeTab, selectedAuction]);
+
+  const handleSyncNow = async () => {
+    setSyncing(true);
+    setSyncMessage(null);
+    try {
+      const res = await fetch("/api/sync/trigger", { method: "POST" });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setSyncMessage(`Synced ${data.auctions} auctions, ${data.items} items. Refreshing…`);
+        await fetchData();
+      } else {
+        setSyncMessage(data.error || JSON.stringify(data));
+      }
+    } catch (err) {
+      setSyncMessage(err instanceof Error ? err.message : "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const filteredItems = searchQuery
     ? items.filter(
@@ -157,6 +179,26 @@ export default function BrowsePage() {
               </div>
             </div>
           ))}
+        </div>
+      ) : filteredItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <span className="text-5xl mb-4">🔍</span>
+          <p className="text-lg font-medium text-[#555570]">No lots found</p>
+          <p className="text-sm text-[#555570] mt-1 mb-6">
+            Sync auction data from AuctionMethod to load lots.
+          </p>
+          <Button
+            onClick={handleSyncNow}
+            disabled={syncing}
+          >
+            <RefreshCw size={18} className={syncing ? "animate-spin mr-2" : "mr-2"} />
+            {syncing ? "Syncing…" : "Sync Now"}
+          </Button>
+          {syncMessage && (
+            <p className={`mt-4 text-sm max-w-md ${syncMessage.includes("Synced") ? "text-emerald-400" : "text-amber-400"}`}>
+              {syncMessage}
+            </p>
+          )}
         </div>
       ) : (
         <LotGrid items={filteredItems} />
