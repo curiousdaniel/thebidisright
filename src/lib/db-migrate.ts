@@ -14,7 +14,10 @@ export async function ensureTables(): Promise<void> {
     );
   }
 
-  const client = new Client({ connectionString: url });
+  const client = new Client({
+    connectionString: url,
+    ssl: { rejectUnauthorized: false },
+  });
   try {
     await client.connect();
 
