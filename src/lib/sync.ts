@@ -6,6 +6,7 @@ const AM_DOMAIN = process.env.AM_DOMAIN || "";
 const AM_EMAIL = process.env.AM_EMAIL || "";
 const AM_PASSWORD = process.env.AM_PASSWORD || "";
 const AM_IMAGE_BASE = process.env.AM_IMAGE_BASE || "";
+const AM_IMAGE_PATH_PREFIX = (process.env.AM_IMAGE_PATH_PREFIX || "").replace(/\/$/, "");
 
 /** Fallback: fetch auctions directly (same as /api/debug/am) when amapi returns empty */
 async function fetchAuctionsDirect(): Promise<Array<Record<string, unknown>>> {
@@ -55,11 +56,12 @@ function buildImageUrl(
   derivedBase?: string
 ): string | null {
   if (!leadImage || typeof leadImage !== "string") return null;
-  const path = leadImage.startsWith("http") ? leadImage : leadImage.replace(/^\//, "");
+  let path = leadImage.startsWith("http") ? leadImage : leadImage.replace(/^\//, "");
   if (path.startsWith("http")) return path;
+  if (AM_IMAGE_PATH_PREFIX) path = `${AM_IMAGE_PATH_PREFIX}/${path}`;
   const base =
-    AM_IMAGE_BASE.trim() ||
     derivedBase ||
+    AM_IMAGE_BASE.trim() ||
     `https://${AM_DOMAIN.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
   const baseClean = base.replace(/\/$/, "");
   return baseClean ? `${baseClean}/${path}` : null;

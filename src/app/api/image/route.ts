@@ -50,14 +50,19 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(imageUrl, {
+    let res = await fetch(imageUrl, {
       headers: {
         Accept: "image/*",
-        "User-Agent": "Mozilla/5.0 (compatible; BidIQ/1.0)",
-        Referer: `${parsed.protocol}//${parsed.host}/`,
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       },
       next: { revalidate: 3600 },
     });
+    if (!res.ok && (res.status === 403 || res.status === 500)) {
+      res = await fetch(imageUrl, {
+        headers: { Accept: "image/*" },
+        next: { revalidate: 3600 },
+      });
+    }
     if (!res.ok) {
       return NextResponse.json({ error: "Upstream error" }, { status: res.status });
     }
