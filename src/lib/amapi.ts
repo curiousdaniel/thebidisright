@@ -54,10 +54,21 @@ export async function fetchAuctions(
   offset = 0,
   limit = 100
 ): Promise<AMApiAuction[]> {
-  const data = await amFetch<{ auctions?: AMApiAuction[]; data?: AMApiAuction[] }>(
+  const data = await amFetch<Record<string, unknown>>(
     `/amapi/admin/auctions?offset=${offset}&limit=${limit}`
   );
-  return data.auctions || data.data || [];
+  // Support various API response shapes
+  const arr =
+    data.auctions ??
+    data.data ??
+    data.results ??
+    data.auction ??
+    data.auction_list;
+  if (Array.isArray(arr)) return arr as AMApiAuction[];
+  if (arr && typeof arr === "object" && !Array.isArray(arr)) {
+    return [arr as AMApiAuction];
+  }
+  return [];
 }
 
 export async function fetchItems(
@@ -65,10 +76,16 @@ export async function fetchItems(
   offset = 0,
   limit = 500
 ): Promise<AMApiItem[]> {
-  const data = await amFetch<{ items?: AMApiItem[]; data?: AMApiItem[] }>(
+  const data = await amFetch<Record<string, unknown>>(
     `/amapi/admin/items?auction=${auctionId}&offset=${offset}&limit=${limit}`
   );
-  return data.items || data.data || [];
+  const arr =
+    data.items ?? data.data ?? data.results ?? data.item ?? data.lots;
+  if (Array.isArray(arr)) return arr as AMApiItem[];
+  if (arr && typeof arr === "object" && !Array.isArray(arr)) {
+    return [arr as AMApiItem];
+  }
+  return [];
 }
 
 export async function fetchItem(

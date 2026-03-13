@@ -8,6 +8,7 @@ export interface SyncResult {
   closed?: number;
   errors?: string[];
   error?: string;
+  raw_auctions?: number;
 }
 
 export async function runSync(): Promise<SyncResult> {
@@ -16,13 +17,15 @@ export async function runSync(): Promise<SyncResult> {
 
   try {
     const auctions = await fetchAuctions();
+    const rawCount = auctions.length;
 
+    // Sync all auctions from API - display filters by published + start_time
     for (const auction of auctions) {
       const isPublished =
         auction.published === true ||
         (auction as Record<string, unknown>).is_published === true ||
-        auction.status === "published";
-      if (!isPublished) continue;
+        auction.status === "published" ||
+        (auction as Record<string, unknown>).status === "published";
 
       const startTime =
         auction.start_time ||
@@ -36,11 +39,16 @@ export async function runSync(): Promise<SyncResult> {
         (auction as Record<string, unknown>).auction_end ||
         null;
 
+      const auctionId =
+        auction.id ??
+        (auction as Record<string, unknown>).auction_id ??
+        (auction as Record<string, unknown>).id;
+
       const { error: auctionError } = await supabase
         .from("am_auctions")
         .upsert(
           {
-            am_auction_id: auction.id,
+            am_auction_id: auctionId,
             title: auction.title,
             description: auction.description || null,
             start_time: startTime,
@@ -58,13 +66,13 @@ export async function runSync(): Promise<SyncResult> {
         );
 
       if (auctionError) {
-        results.errors.push(`Auction ${auction.id}: ${auctionError.message}`);
+        results.errors.push(`Auction ${auctionId}: ${auctionError.message}`);
         continue;
       }
       results.auctions++;
 
       try {
-        const items = await fetchItems(auction.id);
+        const items = await fetchItems(auctionId);
 
         for (const item of items) {
           const now = new Date();
@@ -79,7 +87,7 @@ export async function runSync(): Promise<SyncResult> {
             .upsert(
               {
                 am_item_id: item.id,
-                am_auction_id: auction.id,
+                am_auction_id: auctionId,
                 title: item.title,
                 description: item.description || null,
                 lot_number: item.lot_number || null,
@@ -107,7 +115,7 @@ export async function runSync(): Promise<SyncResult> {
         }
       } catch (err) {
         results.errors.push(
-          `Items for auction ${auction.id}: ${err instanceof Error ? err.message : "Unknown error"}`
+          `Items for auction ${auctionId}: ${err instanceof Error ? err.message : "Unknown error"}`
         );
       }
     }
@@ -118,11 +126,12 @@ export async function runSync(): Promise<SyncResult> {
       // View may not exist yet
     }
 
-    return { success: true, ...results };
+    return { success: true, raw_auctions: rawCount, ...results };
   } catch (err) {
     return {
       success: false,
       error: err instanceof Error ? err.message : "Unknown error",
+      raw_auctions: 0,
       ...results,
     };
   }

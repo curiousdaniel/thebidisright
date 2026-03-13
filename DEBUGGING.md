@@ -8,14 +8,19 @@ On the **Browse** page, when no lots are shown, click the **"Sync Now"** button.
 
 You can also use the **Sync Now** button on the Operator Dashboard at `/dashboard`.
 
-## 2. Call the Debug Endpoint
+## 2. Call the Debug Endpoints
 
-Visit: **`https://your-app.vercel.app/api/debug`** (or `http://localhost:3000/api/debug` locally)
+**Database state:** `https://your-app.vercel.app/api/debug`
 
-This returns:
+Returns:
 - All auctions in the database with `published`, `start_time`, and item counts
 - Which auctions pass the filter (published + start_time in future)
 - Sample API field names from `raw_data` (to spot mismatches)
+
+**Raw AuctionMethod API:** `https://your-app.vercel.app/api/debug/am`
+
+Returns:
+- Raw auth + auctions API response. Use when sync returns 0 auctions — check `topLevelKeys`, `firstAuctionKeys`, and `auctionsResponse` to see the actual API format.
 
 ## 2. Common Issues
 

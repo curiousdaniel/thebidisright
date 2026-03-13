@@ -80,7 +80,7 @@ export default function BrowsePage() {
     try {
       const res = await fetch("/api/sync/trigger", { method: "POST" });
       const text = await res.text();
-      let data: { success?: boolean; auctions?: number; items?: number; error?: string } = {};
+      let data: { success?: boolean; auctions?: number; items?: number; raw_auctions?: number; error?: string } = {};
       try {
         data = JSON.parse(text);
       } catch {
@@ -89,7 +89,12 @@ export default function BrowsePage() {
       }
 
       if (res.ok && data.success) {
-        setSyncMessage(`Synced ${data.auctions} auctions, ${data.items} items. Refreshing…`);
+        const raw = data.raw_auctions ?? data.auctions;
+        const msg =
+          raw === 0
+            ? `API returned 0 auctions. Visit /api/debug/am to inspect the raw response.`
+            : `Synced ${data.auctions} auctions, ${data.items} items. Refreshing…`;
+        setSyncMessage(msg);
         await fetchData();
       } else {
         setSyncMessage(data.error || JSON.stringify(data));
