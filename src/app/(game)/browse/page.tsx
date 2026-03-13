@@ -79,7 +79,14 @@ export default function BrowsePage() {
     setSyncMessage(null);
     try {
       const res = await fetch("/api/sync/trigger", { method: "POST" });
-      const data = await res.json();
+      const text = await res.text();
+      let data: { success?: boolean; auctions?: number; items?: number; error?: string } = {};
+      try {
+        data = JSON.parse(text);
+      } catch {
+        setSyncMessage("Server returned an error. Check Vercel logs.");
+        return;
+      }
 
       if (res.ok && data.success) {
         setSyncMessage(`Synced ${data.auctions} auctions, ${data.items} items. Refreshing…`);

@@ -49,7 +49,14 @@ export default function DashboardPage() {
     setSyncResult(null);
     try {
       const res = await fetch("/api/sync/trigger", { method: "POST" });
-      const data = await res.json();
+      const text = await res.text();
+      let data: { success?: boolean; auctions?: number; items?: number; error?: string; errors?: string[] } = {};
+      try {
+        data = JSON.parse(text);
+      } catch {
+        setSyncResult("Server returned an error. Check Vercel logs.");
+        return;
+      }
 
       if (res.ok && data.success) {
         setSyncResult(

@@ -1,44 +1,25 @@
 import { NextResponse } from "next/server";
+import { runSync } from "@/lib/sync";
 
 export const dynamic = "force-dynamic";
 
 /**
- * One-click sync trigger. Calls the sync endpoint with CRON_SECRET.
+ * One-click sync trigger. Runs sync directly (no internal fetch).
  * Add a "Sync Now" button in the dashboard that fetches this route.
  */
 export async function POST() {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    return NextResponse.json(
-      { error: "CRON_SECRET not configured" },
-      { status: 500 }
-    );
-  }
-
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-    "http://localhost:3000";
-
   try {
-    const res = await fetch(`${baseUrl}/api/sync`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${secret}`,
-      },
-    });
+    const result = await runSync();
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      return NextResponse.json(data, { status: res.status });
+    if (result.success) {
+      return NextResponse.json(result);
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(result, { status: 500 });
   } catch (err) {
     return NextResponse.json(
       {
-        error: err instanceof Error ? err.message : "Sync request failed",
+        error: err instanceof Error ? err.message : "Sync failed",
       },
       { status: 500 }
     );
