@@ -19,7 +19,24 @@ export async function POST(request: Request) {
     const auctions = await fetchAuctions();
 
     for (const auction of auctions) {
-      if (!auction.published && auction.status !== "published") continue;
+      const isPublished =
+        auction.published === true ||
+        (auction as Record<string, unknown>).is_published === true ||
+        auction.status === "published";
+      if (!isPublished) continue;
+
+      // Support alternate API field names (AuctionMethod may use start_date, sale_date, etc.)
+      const startTime =
+        auction.start_time ||
+        (auction as Record<string, unknown>).start_date ||
+        (auction as Record<string, unknown>).sale_date ||
+        (auction as Record<string, unknown>).auction_start ||
+        null;
+      const endTime =
+        auction.end_time ||
+        (auction as Record<string, unknown>).end_date ||
+        (auction as Record<string, unknown>).auction_end ||
+        null;
 
       const { error: auctionError } = await supabase
         .from("am_auctions")
@@ -28,10 +45,10 @@ export async function POST(request: Request) {
             am_auction_id: auction.id,
             title: auction.title,
             description: auction.description || null,
-            start_time: auction.start_time || null,
-            end_time: auction.end_time || null,
+            start_time: startTime,
+            end_time: endTime,
             status: auction.status || null,
-            published: auction.published ?? true,
+            published: isPublished,
             city: auction.city || null,
             state: auction.state || null,
             timezone: auction.timezone || null,
