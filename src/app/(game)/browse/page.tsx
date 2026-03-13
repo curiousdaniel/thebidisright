@@ -1,0 +1,153 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { AMItem, AMAuction } from "@/types/auction";
+import LotGrid from "@/components/game/LotGrid";
+import Tabs from "@/components/ui/Tabs";
+import { Search, Clock, Grid3X3, Flame } from "lucide-react";
+
+type BrowseTab = "all" | "closing" | "category" | "hot";
+
+const tabs = [
+  { id: "all" as const, label: "All Auctions", icon: <Grid3X3 size={14} /> },
+  { id: "closing" as const, label: "Closing Soon", icon: <Clock size={14} /> },
+  { id: "hot" as const, label: "Hot Lots", icon: <Flame size={14} /> },
+];
+
+export default function BrowsePage() {
+  const [activeTab, setActiveTab] = useState<BrowseTab>("all");
+  const [auctions, setAuctions] = useState<AMAuction[]>([]);
+  const [items, setItems] = useState<AMItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAuction, setSelectedAuction] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const supabase = createClient();
+
+      const { data: auctionsData } = await supabase
+        .from("am_auctions")
+        .select("*")
+        .eq("published", true)
+        .order("end_time", { ascending: true });
+
+      setAuctions((auctionsData as AMAuction[]) || []);
+
+      let query = supabase
+        .from("am_items")
+        .select("*")
+        .eq("status", "open");
+
+      if (selectedAuction) {
+        query = query.eq("am_auction_id", selectedAuction);
+      }
+
+      if (activeTab === "closing") {
+        query = query.order("closes_at", { ascending: true }).limit(50);
+      } else {
+        query = query.order("created_at", { ascending: false }).limit(100);
+      }
+
+      const { data: itemsData } = await query;
+      setItems((itemsData as AMItem[]) || []);
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [activeTab, selectedAuction]);
+
+  const filteredItems = searchQuery
+    ? items.filter(
+        (item) =>
+          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.category?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : items;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-serif font-bold text-[#F1F1F5]">
+          Browse Lots
+        </h1>
+        <p className="text-[#8888A0] mt-1">
+          Find lots to appraise and lock in your predictions
+        </p>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search
+          size={18}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555570]"
+        />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search lots by title or category..."
+          className="w-full bg-[#141420] border border-[#2A2A40] rounded-xl pl-10 pr-4 py-3 text-[#F1F1F5] placeholder:text-[#555570] focus:outline-none focus:border-[#D4A843] transition-colors"
+        />
+      </div>
+
+      {/* Tabs */}
+      <Tabs
+        tabs={tabs}
+        defaultTab={activeTab}
+        onTabChange={(id) => setActiveTab(id as BrowseTab)}
+      />
+
+      {/* Auction filter chips */}
+      {activeTab === "all" && auctions.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          <button
+            onClick={() => setSelectedAuction(null)}
+            className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
+              !selectedAuction
+                ? "bg-[#D4A843] text-[#0A0A0F] font-semibold"
+                : "bg-[#1E1E30] text-[#8888A0] hover:text-[#F1F1F5]"
+            }`}
+          >
+            All
+          </button>
+          {auctions.map((auction) => (
+            <button
+              key={auction.am_auction_id}
+              onClick={() => setSelectedAuction(auction.am_auction_id)}
+              className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
+                selectedAuction === auction.am_auction_id
+                  ? "bg-[#D4A843] text-[#0A0A0F] font-semibold"
+                  : "bg-[#1E1E30] text-[#8888A0] hover:text-[#F1F1F5]"
+              }`}
+            >
+              {auction.title}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Items grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-[#141420] border border-[#2A2A40] rounded-xl overflow-hidden animate-pulse"
+            >
+              <div className="aspect-[4/3] bg-[#1E1E30]" />
+              <div className="p-4 space-y-2">
+                <div className="h-4 bg-[#1E1E30] rounded w-3/4" />
+                <div className="h-3 bg-[#1E1E30] rounded w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <LotGrid items={filteredItems} />
+      )}
+    </div>
+  );
+}

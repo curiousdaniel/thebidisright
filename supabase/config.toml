@@ -1,0 +1,16 @@
+[project]
+id = "bidiq"
+name = "BidIQ"
+
+[db]
+port = 54322
+major_version = 15
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://bidiq.vercel.app"]
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
