@@ -33,13 +33,16 @@ export async function GET(req: NextRequest) {
   const parsed = new URL(imageUrl);
   const host = parsed.hostname.toLowerCase();
   const allowedHosts = [AM_DOMAIN, AM_IMAGE_BASE].filter(Boolean).map((h) => h.toLowerCase());
-  const isAllowed = allowedHosts.some(
-    (allowedHost) =>
-      host === allowedHost ||
-      host.endsWith("." + allowedHost) ||
-      allowedHost.endsWith("." + host)
-  );
-  if (!isAllowed || allowedHosts.length === 0) {
+  const isAllowed =
+    allowedHosts.some(
+      (allowedHost) =>
+        host === allowedHost ||
+        host.endsWith("." + allowedHost) ||
+        allowedHost.endsWith("." + host)
+    ) ||
+    host.endsWith(".cloudfront.net") ||
+    host.endsWith(".amazonaws.com");
+  if (!isAllowed) {
     return NextResponse.json(
       { error: "URL not allowed. Set AM_DOMAIN or AM_IMAGE_BASE." },
       { status: 403 }

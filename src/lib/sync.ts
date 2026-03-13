@@ -50,11 +50,17 @@ function toNum(v: unknown): number | null {
   return null;
 }
 
-function buildImageUrl(leadImage: unknown): string | null {
+function buildImageUrl(
+  leadImage: unknown,
+  derivedBase?: string
+): string | null {
   if (!leadImage || typeof leadImage !== "string") return null;
   const path = leadImage.startsWith("http") ? leadImage : leadImage.replace(/^\//, "");
   if (path.startsWith("http")) return path;
-  const base = AM_IMAGE_BASE.trim() || `https://${AM_DOMAIN.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
+  const base =
+    AM_IMAGE_BASE.trim() ||
+    derivedBase ||
+    `https://${AM_DOMAIN.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
   const baseClean = base.replace(/\/$/, "");
   return baseClean ? `${baseClean}/${path}` : null;
 }
@@ -144,6 +150,19 @@ export async function runSync(): Promise<SyncResult> {
         }
       }
 
+      // Derive image base from auction CDN URL if available (e.g. limage_url from CloudFront)
+      const auctionLimage = raw.limage_url ?? raw.image_url;
+      let derivedImageBase = "";
+      if (typeof auctionLimage === "string" && auctionLimage.startsWith("http")) {
+        try {
+          const u = new URL(auctionLimage);
+          const pathParts = u.pathname.split("/").filter(Boolean);
+          if (pathParts.length >= 2 && pathParts[0] === "a") {
+            derivedImageBase = `${u.origin}/a/${pathParts[1]}`;
+          }
+        } catch {}
+      }
+
       for (const item of items) {
         const itemId = toNum(item.id) ?? toNum(item.item_id);
         if (itemId == null) continue;
@@ -159,10 +178,14 @@ export async function runSync(): Promise<SyncResult> {
         }
         const isClosed = closesAt ? closesAt < new Date() : false;
 
+        // Prefer full URLs from API (e.g. image_url, thumb_url); fall back to building from path
+        const raw = item as Record<string, unknown>;
         const primaryImage =
-          buildImageUrl(item.lead_image) ||
-          buildImageUrl(item.lead_image_thumb) ||
-          buildImageUrl(item.image) ||
+          (typeof raw.image_url === "string" && raw.image_url.startsWith("http") ? raw.image_url : null) ||
+          (typeof raw.thumb_url === "string" && raw.thumb_url.startsWith("http") ? raw.thumb_url : null) ||
+          buildImageUrl(item.lead_image, derivedImageBase || undefined) ||
+          buildImageUrl(item.lead_image_thumb, derivedImageBase || undefined) ||
+          buildImageUrl(item.image, derivedImageBase || undefined) ||
           (item.images as Array<{ url?: string }>)?.[0]?.url ||
           null;
 

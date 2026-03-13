@@ -38,11 +38,11 @@ export async function GET(req: NextRequest) {
       allowedHost.endsWith("." + host)
   );
 
-  if (allowedHosts.length === 0) {
-    return NextResponse.json({ error: "AM_DOMAIN or AM_IMAGE_BASE not configured" });
-  }
-
-  if (!isAllowed) {
+  const allowCdn = host.endsWith(".cloudfront.net") || host.endsWith(".amazonaws.com");
+  if (!isAllowed && !allowCdn) {
+    if (allowedHosts.length === 0) {
+      return NextResponse.json({ error: "AM_DOMAIN or AM_IMAGE_BASE not configured" });
+    }
     return NextResponse.json({
       error: "URL host not allowed",
       host,

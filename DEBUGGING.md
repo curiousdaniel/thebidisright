@@ -22,7 +22,14 @@ Returns:
 Returns:
 - Raw auth + auctions API response. Use when sync returns 0 auctions — check `topLevelKeys`, `firstAuctionKeys`, and `auctionsResponse` to see the actual API format.
 
-**Image diagnostics:** Check `sampleItems` and `env` in `/api/debug`. If `image_url` is "null" for items, ensure `AM_DOMAIN` is set in Vercel. If images use a different base URL, set `AM_IMAGE_BASE` (e.g. `https://your-auction-site.com`). After adding env vars, run Sync Now again.
+**Image diagnostics:** Check `sampleItems` and `env` in `/api/debug`. If images show as placeholders:
+1. **image_url is "null"** — Ensure `AM_DOMAIN` is set in Vercel, then run Sync Now again.
+2. **image_url is "set" but images don't load** — The image base URL may be wrong. AuctionMethod often serves images from a CDN (e.g. CloudFront), not the API domain. To find the correct base:
+   - Open your auction site and view an item with an image
+   - Right-click the image → "Copy image address"
+   - The URL might look like `https://d1zp91yosdcuuq.cloudfront.net/.../i/1/1773431300/i4-1.jpg`
+   - Set `AM_IMAGE_BASE` in Vercel to the base (everything before the path), e.g. `https://d1zp91yosdcuuq.cloudfront.net`
+   - Run Sync Now again
 
 ## 2. Common Issues
 
