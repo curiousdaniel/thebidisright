@@ -2,6 +2,32 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAuctions, fetchItems } from "@/lib/amapi";
 
 const AM_DOMAIN = process.env.AM_DOMAIN || "";
+const AM_EMAIL = process.env.AM_EMAIL || "";
+const AM_PASSWORD = process.env.AM_PASSWORD || "";
+
+/** Fallback: fetch auctions directly (same as /api/debug/am) when amapi returns empty */
+async function fetchAuctionsDirect(): Promise<Array<Record<string, unknown>>> {
+  const base = `https://${AM_DOMAIN}`;
+  const authRes = await fetch(`${base}/amapi/auth`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: AM_EMAIL, password: AM_PASSWORD }),
+  });
+  if (!authRes.ok) return [];
+  const authData = (await authRes.json()) as { token?: string; access_token?: string };
+  const token = authData.token || authData.access_token;
+  if (!token) return [];
+
+  const auctionsRes = await fetch(`${base}/amapi/admin/auctions?offset=0&limit=100`, {
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+  });
+  if (!auctionsRes.ok) return [];
+  const data = (await auctionsRes.json()) as Record<string, unknown>;
+  const arr = data.auctions ?? data.data ?? data.results ?? data.auction ?? data.auction_list;
+  if (Array.isArray(arr)) return arr as Array<Record<string, unknown>>;
+  if (arr && typeof arr === "object") return [arr as Record<string, unknown>];
+  return [];
+}
 
 export interface SyncResult {
   success: boolean;
@@ -34,11 +60,14 @@ export async function runSync(): Promise<SyncResult> {
   const results = { auctions: 0, items: 0, closed: 0, errors: [] as string[] };
 
   try {
-    const auctions = await fetchAuctions();
+    let auctions: Array<Record<string, unknown>> = (await fetchAuctions()) as unknown as Array<Record<string, unknown>>;
+    if (auctions.length === 0) {
+      auctions = await fetchAuctionsDirect();
+    }
     const rawCount = auctions.length;
 
     for (const auction of auctions) {
-      const raw = auction as Record<string, unknown>;
+      const raw = auction;
       // AuctionMethod: status "1" or front_page "1" = published
       const isPublished =
         auction.published === true ||
