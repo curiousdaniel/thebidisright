@@ -53,7 +53,8 @@ function buildImageUrl(leadImage: unknown): string | null {
   if (!leadImage || typeof leadImage !== "string") return null;
   const path = leadImage.startsWith("http") ? leadImage : leadImage.replace(/^\//, "");
   if (path.startsWith("http")) return path;
-  return AM_DOMAIN ? `https://${AM_DOMAIN}/${path}` : null;
+  const domain = AM_DOMAIN.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  return domain ? `https://${domain}/${path}` : null;
 }
 
 export async function runSync(): Promise<SyncResult> {
@@ -158,6 +159,7 @@ export async function runSync(): Promise<SyncResult> {
 
         const primaryImage =
           buildImageUrl(item.lead_image) ||
+          buildImageUrl(item.lead_image_thumb) ||
           buildImageUrl(item.image) ||
           (item.images as Array<{ url?: string }>)?.[0]?.url ||
           null;

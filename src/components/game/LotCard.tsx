@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { AMItem } from "@/types/auction";
 import { formatPrice } from "@/lib/utils";
+import { getItemImageUrl } from "@/lib/image-url";
 import { Card } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import CountdownTimer from "./CountdownTimer";
@@ -27,14 +28,16 @@ export default function LotCard({
     none: { label: "Not Yet", variant: "default" as const, icon: "⏳" },
   }[predictionStatus];
 
+  const imageSrc = getItemImageUrl(item.image_url);
+
   return (
     <Link href={`/lot/${item.am_item_id}`}>
       <Card className="group hover:border-[#D4A843]/50 transition-all duration-300 hover:shadow-lg hover:shadow-[#D4A843]/5">
         {/* Image */}
         <div className="relative aspect-[4/3] bg-[#0A0A0F] overflow-hidden">
-          {item.image_url ? (
+          {imageSrc ? (
             <img
-              src={item.image_url}
+              src={imageSrc}
               alt={item.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"

@@ -14,6 +14,7 @@ import Badge from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
 import { usePrediction } from "@/hooks/usePrediction";
 import { formatPrice } from "@/lib/utils";
+import { getItemImageUrl } from "@/lib/image-url";
 import { calculateCrowdStats } from "@/lib/crowd-stats";
 import { ArrowLeft, ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -124,11 +125,14 @@ export default function LotDetailPage() {
     );
   }
 
-  const images = item.image_urls?.length
+  const rawImages = item.image_urls?.length
     ? item.image_urls
     : item.image_url
     ? [item.image_url]
     : [];
+  const images = rawImages
+    .map((url) => getItemImageUrl(url))
+    .filter((url): url is string => url != null);
 
   const maxPrice = Math.max((item.starting_bid || 100) * 3, 100);
 

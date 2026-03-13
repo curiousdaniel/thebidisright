@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { RevealItem } from "@/types/game";
 import RevealAnimation from "./RevealAnimation";
+import { getItemImageUrl } from "@/lib/image-url";
 import Button from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { formatPrice } from "@/lib/utils";
@@ -36,7 +37,7 @@ export default function RevealQueue({ reveals }: RevealQueueProps) {
     return (
       <RevealAnimation
         itemTitle={current.item.title}
-        imageUrl={current.item.image_url}
+        imageUrl={getItemImageUrl(current.item.image_url)}
         predictedPrice={current.result.predicted_price}
         hammerPrice={current.result.hammer_price}
         accuracyTier={current.result.accuracy_tier}
@@ -131,7 +132,9 @@ export default function RevealQueue({ reveals }: RevealQueueProps) {
       </div>
 
       <div className="space-y-2">
-        {reveals.map((reveal, i) => (
+        {reveals.map((reveal, i) => {
+          const imgSrc = getItemImageUrl(reveal.item.image_url);
+          return (
           <motion.div
             key={i}
             initial={{ opacity: 0, x: -20 }}
@@ -139,9 +142,9 @@ export default function RevealQueue({ reveals }: RevealQueueProps) {
             transition={{ delay: i * 0.05 }}
           >
             <Card className="p-3 flex items-center gap-3">
-              {reveal.item.image_url ? (
+              {imgSrc ? (
                 <img
-                  src={reveal.item.image_url}
+                  src={imgSrc}
                   alt=""
                   className="w-12 h-12 rounded-lg object-cover"
                 />
@@ -159,7 +162,8 @@ export default function RevealQueue({ reveals }: RevealQueueProps) {
               <span className="text-xs text-[#8888A0]">Ready</span>
             </Card>
           </motion.div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
