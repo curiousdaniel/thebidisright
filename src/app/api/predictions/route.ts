@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { isWithinLockout } from "@/lib/utils";
 import { isNewDay, shouldResetDailyStreak } from "@/lib/streaks";
+import { isAuctionEligibleForGame } from "@/lib/auction-filters";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,20 @@ export async function POST(request: Request) {
 
   if (item.status !== "open") {
     return NextResponse.json({ error: "Item is closed" }, { status: 400 });
+  }
+
+  // Only allow predictions for lots from published auctions where bidding has not yet started
+  const { data: auction } = await admin
+    .from("am_auctions")
+    .select("published, start_time")
+    .eq("am_auction_id", item.am_auction_id)
+    .single();
+
+  if (!auction || !isAuctionEligibleForGame(auction)) {
+    return NextResponse.json(
+      { error: "This auction is not available for predictions (not published or bidding has already started)" },
+      { status: 400 }
+    );
   }
 
   // Check lockout

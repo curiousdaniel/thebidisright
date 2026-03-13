@@ -16,15 +16,35 @@ export default function QuickPlayPage() {
   const fetchRandomItems = async () => {
     setLoading(true);
     const supabase = createClient();
+    const now = new Date().toISOString();
+
+    // Only items from published auctions where bidding has not yet started
+    const { data: auctionsData } = await supabase
+      .from("am_auctions")
+      .select("am_auction_id")
+      .eq("published", true)
+      .gt("start_time", now);
+
+    const eligibleAuctionIds =
+      auctionsData?.map((a) => a.am_auction_id) || [];
+
+    if (eligibleAuctionIds.length === 0) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
 
     const { data } = await supabase
       .from("am_items")
       .select("*")
-      .eq("status", "open");
+      .eq("status", "open")
+      .in("am_auction_id", eligibleAuctionIds);
 
     if (data && data.length > 0) {
       const shuffled = [...data].sort(() => Math.random() - 0.5);
       setItems(shuffled.slice(0, 5) as AMItem[]);
+    } else {
+      setItems([]);
     }
     setLoading(false);
   };

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { AMItem, AMAuction } from "@/types/auction";
+import { isAuctionEligibleForGame } from "@/lib/auction-filters";
 import LotGrid from "@/components/game/LotGrid";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -14,6 +15,7 @@ export default function AuctionPage() {
   const [auction, setAuction] = useState<AMAuction | null>(null);
   const [items, setItems] = useState<AMItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notEligible, setNotEligible] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,12 +27,21 @@ export default function AuctionPage() {
         .eq("am_auction_id", auctionId)
         .single();
 
-      setAuction(auctionData as AMAuction | null);
+      const auctionRecord = auctionData as AMAuction | null;
+      setAuction(auctionRecord);
+
+      if (!auctionRecord || !isAuctionEligibleForGame(auctionRecord)) {
+        setNotEligible(true);
+        setItems([]);
+        setLoading(false);
+        return;
+      }
 
       const { data: itemsData } = await supabase
         .from("am_items")
         .select("*")
         .eq("am_auction_id", auctionId)
+        .eq("status", "open")
         .order("lot_number", { ascending: true });
 
       setItems((itemsData as AMItem[]) || []);
@@ -39,6 +50,38 @@ export default function AuctionPage() {
 
     fetchData();
   }, [auctionId]);
+
+  if (notEligible) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/browse"
+            className="text-[#8888A0] hover:text-[#F1F1F5] transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </Link>
+        </div>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <span className="text-5xl mb-4">🔒</span>
+          <h2 className="text-xl font-serif font-bold text-[#F1F1F5]">
+            Auction Not Available
+          </h2>
+          <p className="text-[#8888A0] mt-2 max-w-md">
+            This auction is either not published or the bidding period has
+            already started. Only lots from published auctions with bidding not
+            yet started are available for predictions.
+          </p>
+          <Link
+            href="/browse"
+            className="mt-6 text-[#D4A843] hover:text-[#F0D78C] font-medium"
+          >
+            ← Back to Browse
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

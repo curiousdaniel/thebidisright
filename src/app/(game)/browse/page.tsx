@@ -27,32 +27,45 @@ export default function BrowsePage() {
     const fetchData = async () => {
       setLoading(true);
       const supabase = createClient();
+      const now = new Date().toISOString();
 
+      // Only published auctions where bidding has not yet started (start_time in future)
       const { data: auctionsData } = await supabase
         .from("am_auctions")
         .select("*")
         .eq("published", true)
-        .order("end_time", { ascending: true });
+        .gt("start_time", now)
+        .order("start_time", { ascending: true });
 
-      setAuctions((auctionsData as AMAuction[]) || []);
+      const auctionsList = (auctionsData as AMAuction[]) || [];
+      setAuctions(auctionsList);
 
-      let query = supabase
-        .from("am_items")
-        .select("*")
-        .eq("status", "open");
+      const eligibleAuctionIds = auctionsList.map((a) => a.am_auction_id);
 
-      if (selectedAuction) {
-        query = query.eq("am_auction_id", selectedAuction);
+      let itemsData: AMItem[] = [];
+      const auctionIdsToFetch =
+        selectedAuction && eligibleAuctionIds.includes(selectedAuction)
+          ? [selectedAuction]
+          : eligibleAuctionIds;
+
+      if (auctionIdsToFetch.length > 0) {
+        let query = supabase
+          .from("am_items")
+          .select("*")
+          .eq("status", "open")
+          .in("am_auction_id", auctionIdsToFetch);
+
+        if (activeTab === "closing") {
+          query = query.order("closes_at", { ascending: true }).limit(50);
+        } else {
+          query = query.order("created_at", { ascending: false }).limit(100);
+        }
+
+        const { data } = await query;
+        itemsData = (data as AMItem[]) || [];
       }
 
-      if (activeTab === "closing") {
-        query = query.order("closes_at", { ascending: true }).limit(50);
-      } else {
-        query = query.order("created_at", { ascending: false }).limit(100);
-      }
-
-      const { data: itemsData } = await query;
-      setItems((itemsData as AMItem[]) || []);
+      setItems(itemsData);
       setLoading(false);
     };
 

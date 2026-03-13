@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { AMItem } from "@/types/auction";
+import { isAuctionEligibleForGame } from "@/lib/auction-filters";
 import { CrowdStats } from "@/types/game";
 import PriceSlider from "@/components/game/PriceSlider";
 import CrowdHeatmap from "@/components/game/CrowdHeatmap";
@@ -21,6 +22,7 @@ export default function LotDetailPage() {
   const itemId = Number(params.itemId);
   const [item, setItem] = useState<AMItem | null>(null);
   const [auctionTitle, setAuctionTitle] = useState("");
+  const [auctionEligible, setAuctionEligible] = useState(true);
   const [crowdStats, setCrowdStats] = useState<CrowdStats | null>(null);
   const [myPrediction, setMyPrediction] = useState<number | null>(null);
   const [isLocked, setIsLocked] = useState(false);
@@ -48,11 +50,16 @@ export default function LotDetailPage() {
 
         const { data: auction } = await supabase
           .from("am_auctions")
-          .select("title")
+          .select("title, published, start_time")
           .eq("am_auction_id", itemData.am_auction_id)
           .single();
 
-        if (auction) setAuctionTitle(auction.title);
+        if (auction) {
+          setAuctionTitle(auction.title);
+          setAuctionEligible(isAuctionEligibleForGame(auction));
+        } else {
+          setAuctionEligible(false);
+        }
       }
 
       // Get crowd stats
@@ -246,13 +253,19 @@ export default function LotDetailPage() {
         <div className="lg:col-span-2 space-y-4">
           <Card>
             <CardContent className="p-5">
+              {!auctionEligible && (
+                <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm text-amber-400">
+                  Predictions are closed for this lot — the auction&apos;s bidding
+                  period has already started.
+                </div>
+              )}
               <PriceSlider
                 startingBid={item.starting_bid || 100}
                 maxPrice={maxPrice}
                 currentPrediction={myPrediction}
                 isLocked={isLocked}
                 onSubmit={(price) => submitPrediction(itemId, price)}
-                disabled={item.status !== "open" || submitting}
+                disabled={!auctionEligible || item.status !== "open" || submitting}
               />
 
               {error && (
