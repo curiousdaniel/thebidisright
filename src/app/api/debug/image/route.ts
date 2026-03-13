@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const AM_DOMAIN = (process.env.AM_DOMAIN || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
+const AM_IMAGE_BASE = (process.env.AM_IMAGE_BASE || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
 
 export const dynamic = "force-dynamic";
 
@@ -28,22 +29,24 @@ export async function GET(req: NextRequest) {
   }
 
   const parsed = new URL(imageUrl);
-  const allowedHost = AM_DOMAIN.toLowerCase();
   const host = parsed.hostname.toLowerCase();
-  const isAllowed =
-    host === allowedHost ||
-    host.endsWith("." + allowedHost) ||
-    allowedHost.endsWith("." + host);
+  const allowedHosts = [AM_DOMAIN, AM_IMAGE_BASE].filter(Boolean).map((h) => h.toLowerCase());
+  const isAllowed = allowedHosts.some(
+    (allowedHost) =>
+      host === allowedHost ||
+      host.endsWith("." + allowedHost) ||
+      allowedHost.endsWith("." + host)
+  );
 
-  if (!AM_DOMAIN) {
-    return NextResponse.json({ error: "AM_DOMAIN not configured", amDomain: "missing" });
+  if (allowedHosts.length === 0) {
+    return NextResponse.json({ error: "AM_DOMAIN or AM_IMAGE_BASE not configured" });
   }
 
   if (!isAllowed) {
     return NextResponse.json({
       error: "URL host not allowed",
       host,
-      allowedHost,
+      allowedHosts,
     });
   }
 

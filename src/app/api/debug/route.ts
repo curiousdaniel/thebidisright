@@ -47,6 +47,12 @@ export async function GET() {
     .limit(1)
     .single();
 
+  // Sample items to check image_url
+  const { data: sampleItems } = await supabase
+    .from("am_items")
+    .select("am_item_id, title, image_url")
+    .limit(5);
+
   return NextResponse.json({
     debug: {
       serverTime: now,
@@ -68,5 +74,15 @@ export async function GET() {
     sampleRawDataKeys: sampleAuction?.raw_data
       ? Object.keys(sampleAuction.raw_data as object)
       : null,
+    sampleItems: sampleItems?.map((i) => ({
+      am_item_id: i.am_item_id,
+      title: (i.title || "").slice(0, 40),
+      image_url: i.image_url ? "set" : "null",
+      image_url_preview: i.image_url ? (i.image_url as string).slice(0, 80) + "..." : null,
+    })),
+    env: {
+      AM_DOMAIN: process.env.AM_DOMAIN ? "set" : "missing",
+      AM_IMAGE_BASE: process.env.AM_IMAGE_BASE ? "set" : "missing",
+    },
   });
 }

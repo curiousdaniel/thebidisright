@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 if (typeof process !== "undefined") process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const AM_DOMAIN = (process.env.AM_DOMAIN || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
+const AM_IMAGE_BASE = (process.env.AM_IMAGE_BASE || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
 
 export const dynamic = "force-dynamic";
 
@@ -29,19 +30,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid url scheme" }, { status: 400 });
   }
 
-  // Only allow proxying from our configured AM domain
-  if (!AM_DOMAIN) {
-    return NextResponse.json({ error: "AM_DOMAIN not configured" }, { status: 500 });
-  }
   const parsed = new URL(imageUrl);
-  const allowedHost = AM_DOMAIN.toLowerCase();
   const host = parsed.hostname.toLowerCase();
-  const isAllowed =
-    host === allowedHost ||
-    host.endsWith("." + allowedHost) ||
-    allowedHost.endsWith("." + host);
-  if (!isAllowed) {
-    return NextResponse.json({ error: "URL not allowed" }, { status: 403 });
+  const allowedHosts = [AM_DOMAIN, AM_IMAGE_BASE].filter(Boolean).map((h) => h.toLowerCase());
+  const isAllowed = allowedHosts.some(
+    (allowedHost) =>
+      host === allowedHost ||
+      host.endsWith("." + allowedHost) ||
+      allowedHost.endsWith("." + host)
+  );
+  if (!isAllowed || allowedHosts.length === 0) {
+    return NextResponse.json(
+      { error: "URL not allowed. Set AM_DOMAIN or AM_IMAGE_BASE." },
+      { status: 403 }
+    );
   }
 
   try {

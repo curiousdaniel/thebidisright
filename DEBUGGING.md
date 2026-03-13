@@ -22,6 +22,8 @@ Returns:
 Returns:
 - Raw auth + auctions API response. Use when sync returns 0 auctions — check `topLevelKeys`, `firstAuctionKeys`, and `auctionsResponse` to see the actual API format.
 
+**Image diagnostics:** Check `sampleItems` and `env` in `/api/debug`. If `image_url` is "null" for items, ensure `AM_DOMAIN` is set in Vercel. If images use a different base URL, set `AM_IMAGE_BASE` (e.g. `https://your-auction-site.com`). After adding env vars, run Sync Now again.
+
 ## 2. Common Issues
 
 ### No auctions at all (`allAuctions` is empty)
