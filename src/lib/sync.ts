@@ -1,6 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAuctions, fetchItems } from "@/lib/amapi";
 
+const AM_DOMAIN = process.env.AM_DOMAIN || "";
+
 export interface SyncResult {
   success: boolean;
   auctions?: number;
@@ -11,6 +13,22 @@ export interface SyncResult {
   raw_auctions?: number;
 }
 
+function toNum(v: unknown): number | null {
+  if (typeof v === "number" && !isNaN(v)) return v;
+  if (typeof v === "string") {
+    const n = parseInt(v, 10);
+    return isNaN(n) ? null : n;
+  }
+  return null;
+}
+
+function buildImageUrl(leadImage: unknown): string | null {
+  if (!leadImage || typeof leadImage !== "string") return null;
+  const path = leadImage.startsWith("http") ? leadImage : leadImage.replace(/^\//, "");
+  if (path.startsWith("http")) return path;
+  return AM_DOMAIN ? `https://${AM_DOMAIN}/${path}` : null;
+}
+
 export async function runSync(): Promise<SyncResult> {
   const supabase = createAdminClient();
   const results = { auctions: 0, items: 0, closed: 0, errors: [] as string[] };
@@ -19,30 +37,35 @@ export async function runSync(): Promise<SyncResult> {
     const auctions = await fetchAuctions();
     const rawCount = auctions.length;
 
-    // Sync all auctions from API - display filters by published + start_time
     for (const auction of auctions) {
+      const raw = auction as Record<string, unknown>;
+      // AuctionMethod: status "1" or front_page "1" = published
       const isPublished =
         auction.published === true ||
-        (auction as Record<string, unknown>).is_published === true ||
+        raw.is_published === true ||
         auction.status === "published" ||
-        (auction as Record<string, unknown>).status === "published";
+        raw.status === "published" ||
+        String(raw.status) === "1" ||
+        String(raw.front_page) === "1";
 
+      // AuctionMethod: starts/ends are ISO; start_time/end_time often null
       const startTime =
         auction.start_time ||
-        (auction as Record<string, unknown>).start_date ||
-        (auction as Record<string, unknown>).sale_date ||
-        (auction as Record<string, unknown>).auction_start ||
+        raw.starts ||
+        raw.start_date ||
+        raw.sale_date ||
+        raw.auction_start ||
         null;
       const endTime =
         auction.end_time ||
-        (auction as Record<string, unknown>).end_date ||
-        (auction as Record<string, unknown>).auction_end ||
+        raw.ends ||
+        raw.end_date ||
+        raw.auction_end ||
         null;
 
-      const auctionId =
-        auction.id ??
-        (auction as Record<string, unknown>).auction_id ??
-        (auction as Record<string, unknown>).id;
+      const auctionIdRaw = auction.id ?? raw.auction_id ?? raw.id;
+      const auctionId = toNum(auctionIdRaw) ?? (typeof auctionIdRaw === "string" ? parseInt(auctionIdRaw, 10) : null);
+      if (auctionId == null) continue;
 
       const { error: auctionError } = await supabase
         .from("am_auctions")
@@ -53,12 +76,12 @@ export async function runSync(): Promise<SyncResult> {
             description: auction.description || null,
             start_time: startTime,
             end_time: endTime,
-            status: auction.status || null,
+            status: auction.status ?? String(raw.status ?? ""),
             published: isPublished,
             city: auction.city || null,
             state: auction.state || null,
-            timezone: auction.timezone || null,
-            image_url: auction.image || null,
+            timezone: auction.timezone || raw.timezone || null,
+            image_url: auction.image || raw.image_url || raw.slider_image_url || null,
             raw_data: auction,
             synced_at: new Date().toISOString(),
           },
@@ -71,52 +94,72 @@ export async function runSync(): Promise<SyncResult> {
       }
       results.auctions++;
 
-      try {
-        const items = await fetchItems(auctionId);
-
-        for (const item of items) {
-          const now = new Date();
-          const closesAt = item.closes_at ? new Date(item.closes_at) : null;
-          const isClosed = closesAt && closesAt < now;
-
-          const imageUrls = item.images?.map((img) => img.url) || null;
-          const primaryImage = item.image || imageUrls?.[0] || null;
-
-          const { error: itemError } = await supabase
-            .from("am_items")
-            .upsert(
-              {
-                am_item_id: item.id,
-                am_auction_id: auctionId,
-                title: item.title,
-                description: item.description || null,
-                lot_number: item.lot_number || null,
-                category: item.category || null,
-                category_id: item.category_id || null,
-                starting_bid: item.starting_bid || null,
-                current_bid: item.current_bid || null,
-                hammer_price: isClosed ? (item.current_bid || null) : null,
-                image_url: primaryImage,
-                image_urls: imageUrls,
-                status: isClosed ? "closed" : "open",
-                closes_at: item.closes_at || null,
-                raw_data: item,
-                synced_at: new Date().toISOString(),
-              },
-              { onConflict: "am_item_id" }
-            );
-
-          if (itemError) {
-            results.errors.push(`Item ${item.id}: ${itemError.message}`);
-          } else {
-            results.items++;
-            if (isClosed) results.closed++;
-          }
+      // AuctionMethod embeds items in auction.items; fallback to fetchItems
+      let items: Array<Record<string, unknown>> = [];
+      if (Array.isArray(raw.items) && raw.items.length > 0) {
+        items = raw.items as Array<Record<string, unknown>>;
+      } else {
+        try {
+          items = (await fetchItems(auctionId)) as unknown as Array<Record<string, unknown>>;
+        } catch (err) {
+          results.errors.push(
+            `Items for auction ${auctionId}: ${err instanceof Error ? err.message : "Unknown error"}`
+          );
+          continue;
         }
-      } catch (err) {
-        results.errors.push(
-          `Items for auction ${auctionId}: ${err instanceof Error ? err.message : "Unknown error"}`
-        );
+      }
+
+      for (const item of items) {
+        const itemId = toNum(item.id) ?? toNum(item.item_id);
+        if (itemId == null) continue;
+
+        // AuctionMethod items: end_time is Unix seconds
+        let closesAt: Date | null = null;
+        const endTimeUnix = item.end_time ?? item.closes_at;
+        if (typeof endTimeUnix === "number") {
+          closesAt = new Date(endTimeUnix * 1000);
+        } else if (typeof endTimeUnix === "string") {
+          const parsed = new Date(endTimeUnix);
+          closesAt = isNaN(parsed.getTime()) ? null : parsed;
+        }
+        const isClosed = closesAt ? closesAt < new Date() : false;
+
+        const primaryImage =
+          buildImageUrl(item.lead_image) ||
+          buildImageUrl(item.image) ||
+          (item.images as Array<{ url?: string }>)?.[0]?.url ||
+          null;
+
+        const { error: itemError } = await supabase
+          .from("am_items")
+          .upsert(
+            {
+              am_item_id: itemId,
+              am_auction_id: auctionId,
+              title: item.title || "",
+              description: item.description || null,
+              lot_number: item.lot_number != null ? String(item.lot_number) : null,
+              category: item.category != null ? String(item.category) : null,
+              category_id: toNum(item.category_id) ?? toNum(item.category),
+              starting_bid: toNum(item.starting_bid) ?? toNum(item.minimum_bid),
+              current_bid: toNum(item.current_bid),
+              hammer_price: isClosed ? (toNum(item.current_bid) ?? toNum(item.final_price)) : null,
+              image_url: primaryImage,
+              image_urls: null,
+              status: isClosed ? "closed" : "open",
+              closes_at: closesAt ? closesAt.toISOString() : null,
+              raw_data: item,
+              synced_at: new Date().toISOString(),
+            },
+            { onConflict: "am_item_id" }
+          );
+
+        if (itemError) {
+          results.errors.push(`Item ${itemId}: ${itemError.message}`);
+        } else {
+          results.items++;
+          if (isClosed) results.closed++;
+        }
       }
     }
 
