@@ -28,6 +28,7 @@ export default function BrowsePage() {
 
   const fetchData = async () => {
     setLoading(true);
+    await fetch("/api/ensure-tables").catch(() => {});
     const supabase = createClient();
     const now = new Date().toISOString();
 

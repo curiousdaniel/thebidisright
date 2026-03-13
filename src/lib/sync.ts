@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAuctions, fetchItems } from "@/lib/amapi";
+import { ensureTables } from "@/lib/db-migrate";
 
 const AM_DOMAIN = process.env.AM_DOMAIN || "";
 const AM_EMAIL = process.env.AM_EMAIL || "";
@@ -60,6 +61,8 @@ export async function runSync(): Promise<SyncResult> {
   const results = { auctions: 0, items: 0, closed: 0, errors: [] as string[] };
 
   try {
+    await ensureTables();
+
     let auctions: Array<Record<string, unknown>> = (await fetchAuctions()) as unknown as Array<Record<string, unknown>>;
     if (auctions.length === 0) {
       auctions = await fetchAuctionsDirect();
