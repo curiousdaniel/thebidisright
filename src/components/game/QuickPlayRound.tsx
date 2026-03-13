@@ -6,6 +6,7 @@ import { AMItem } from "@/types/auction";
 import PriceSlider from "./PriceSlider";
 import { formatPrice } from "@/lib/utils";
 import { getItemImageUrl } from "@/lib/image-url";
+import AuctionImage from "./AuctionImage";
 import { Timer, Trophy } from "lucide-react";
 
 interface QuickPlayRoundProps {
@@ -88,7 +89,7 @@ export default function QuickPlayRound({
   }
 
   const item = items[currentIdx];
-  const imageSrc = getItemImageUrl(item.image_url);
+  const proxyUrl = getItemImageUrl(item.image_url);
   const progress = ((currentIdx + 1) / items.length) * 100;
   const urgency = timeLeft <= 15;
 
@@ -132,10 +133,11 @@ export default function QuickPlayRound({
         className="space-y-4"
       >
         <div className="flex gap-4">
-          {imageSrc ? (
-            <img
-              src={imageSrc}
+          {(proxyUrl || item.image_url) ? (
+            <AuctionImage
+              imageUrl={item.image_url}
               alt={item.title}
+              proxyUrl={proxyUrl || ""}
               className="w-24 h-24 rounded-xl object-cover"
             />
           ) : null}

@@ -11,6 +11,7 @@ import PriceSlider from "@/components/game/PriceSlider";
 import CrowdHeatmap from "@/components/game/CrowdHeatmap";
 import CountdownTimer from "@/components/game/CountdownTimer";
 import Badge from "@/components/ui/Badge";
+import AuctionImage from "@/components/game/AuctionImage";
 import { Card, CardContent } from "@/components/ui/Card";
 import { usePrediction } from "@/hooks/usePrediction";
 import { formatPrice } from "@/lib/utils";
@@ -164,9 +165,10 @@ export default function LotDetailPage() {
           <div className="relative aspect-[4/3] bg-[#141420] rounded-xl overflow-hidden border border-[#2A2A40]">
             {images.length > 0 ? (
               <>
-                <img
-                  src={images[activeImage]}
+                <AuctionImage
+                  imageUrl={rawImages[activeImage]}
                   alt={item.title}
+                  proxyUrl={images[activeImage]}
                   className="w-full h-full object-contain"
                 />
                 {images.length > 1 && (

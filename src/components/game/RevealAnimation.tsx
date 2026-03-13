@@ -5,10 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatPrice } from "@/lib/utils";
 import { ACCURACY_TIERS, type AccuracyTier } from "@/types/game";
 import Button from "@/components/ui/Button";
+import AuctionImage from "./AuctionImage";
 
 interface RevealAnimationProps {
   itemTitle: string;
   imageUrl: string | null;
+  proxyUrl: string | null;
   predictedPrice: number;
   hammerPrice: number;
   accuracyTier: AccuracyTier;
@@ -21,6 +23,7 @@ type Phase = "drumroll" | "split" | "verdict" | "points";
 export default function RevealAnimation({
   itemTitle,
   imageUrl,
+  proxyUrl,
   predictedPrice,
   hammerPrice,
   accuracyTier,
@@ -73,14 +76,18 @@ export default function RevealAnimation({
             exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-6"
           >
-            {imageUrl && (
-              <motion.img
-                src={imageUrl}
-                alt={itemTitle}
-                className="w-64 h-64 object-cover rounded-2xl"
+            {(imageUrl || proxyUrl) && (
+              <motion.div
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
-              />
+              >
+                <AuctionImage
+                  imageUrl={imageUrl}
+                  alt={itemTitle}
+                  proxyUrl={proxyUrl || ""}
+                  className="w-64 h-64 object-cover rounded-2xl"
+                />
+              </motion.div>
             )}
             <motion.div
               className="w-4 h-4 rounded-full bg-[#D4A843]"

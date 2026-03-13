@@ -36,14 +36,21 @@ export async function GET(req: NextRequest) {
   const parsed = new URL(imageUrl);
   const allowedHost = AM_DOMAIN.toLowerCase();
   const host = parsed.hostname.toLowerCase();
-  const isAllowed = host === allowedHost || host.endsWith("." + allowedHost);
+  const isAllowed =
+    host === allowedHost ||
+    host.endsWith("." + allowedHost) ||
+    allowedHost.endsWith("." + host);
   if (!isAllowed) {
     return NextResponse.json({ error: "URL not allowed" }, { status: 403 });
   }
 
   try {
     const res = await fetch(imageUrl, {
-      headers: { Accept: "image/*" },
+      headers: {
+        Accept: "image/*",
+        "User-Agent": "Mozilla/5.0 (compatible; BidIQ/1.0)",
+        Referer: `${parsed.protocol}//${parsed.host}/`,
+      },
       next: { revalidate: 3600 },
     });
     if (!res.ok) {

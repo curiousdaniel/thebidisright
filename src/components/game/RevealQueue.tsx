@@ -37,7 +37,8 @@ export default function RevealQueue({ reveals }: RevealQueueProps) {
     return (
       <RevealAnimation
         itemTitle={current.item.title}
-        imageUrl={getItemImageUrl(current.item.image_url)}
+        imageUrl={current.item.image_url}
+        proxyUrl={getItemImageUrl(current.item.image_url)}
         predictedPrice={current.result.predicted_price}
         hammerPrice={current.result.hammer_price}
         accuracyTier={current.result.accuracy_tier}
