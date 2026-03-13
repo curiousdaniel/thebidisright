@@ -117,14 +117,31 @@ export default function BrowsePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-serif font-bold text-[#F1F1F5]">
-          Browse Lots
-        </h1>
-        <p className="text-[#8888A0] mt-1">
-          Find lots to appraise and lock in your predictions
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-serif font-bold text-[#F1F1F5]">
+            Browse Lots
+          </h1>
+          <p className="text-[#8888A0] mt-1">
+            Find lots to appraise and lock in your predictions
+          </p>
+        </div>
+        <Button
+          onClick={handleSyncNow}
+          disabled={syncing}
+          variant="secondary"
+          className="shrink-0"
+        >
+          <RefreshCw size={16} className={syncing ? "animate-spin mr-2" : "mr-2"} />
+          {syncing ? "Syncing…" : "Sync Now"}
+        </Button>
       </div>
+
+      {syncMessage && (
+        <p className={`text-sm ${syncMessage.includes("Synced") ? "text-emerald-400" : "text-amber-400"}`}>
+          {syncMessage}
+        </p>
+      )}
 
       {/* Search */}
       <div className="relative">
@@ -197,21 +214,9 @@ export default function BrowsePage() {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <span className="text-5xl mb-4">🔍</span>
           <p className="text-lg font-medium text-[#555570]">No lots found</p>
-          <p className="text-sm text-[#555570] mt-1 mb-6">
-            Sync auction data from AuctionMethod to load lots.
+          <p className="text-sm text-[#555570] mt-1">
+            Use the Sync Now button above to load auction data from AuctionMethod.
           </p>
-          <Button
-            onClick={handleSyncNow}
-            disabled={syncing}
-          >
-            <RefreshCw size={18} className={syncing ? "animate-spin mr-2" : "mr-2"} />
-            {syncing ? "Syncing…" : "Sync Now"}
-          </Button>
-          {syncMessage && (
-            <p className={`mt-4 text-sm max-w-md ${syncMessage.includes("Synced") ? "text-emerald-400" : "text-amber-400"}`}>
-              {syncMessage}
-            </p>
-          )}
         </div>
       ) : (
         <LotGrid items={filteredItems} />
