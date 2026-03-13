@@ -1,3 +1,6 @@
+// Allow self-signed certs for AuctionMethod API
+if (typeof process !== "undefined") process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 import { NextResponse } from "next/server";
 
 const AM_DOMAIN = process.env.AM_DOMAIN!;

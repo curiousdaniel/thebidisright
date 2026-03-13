@@ -1,3 +1,6 @@
+// Allow self-signed certs for AuctionMethod API (set before any TLS connection)
+if (typeof process !== "undefined") process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 import { NextResponse } from "next/server";
 import { runSync } from "@/lib/sync";
 
