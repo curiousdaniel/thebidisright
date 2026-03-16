@@ -24,7 +24,7 @@ Returns:
 
 **Image diagnostics:** Check `sampleItems` and `env` in `/api/debug`. If images show as placeholders:
 1. **image_url is "null"** — Ensure `AM_DOMAIN` is set in Vercel, then run Sync Now again.
-2. **image_url is "set" but images don't load** — You must **run Sync Now** after changing env vars. For CloudFront CDNs, set both `AM_IMAGE_BASE` (e.g. `https://d1zp91yosdcuuq.cloudfront.net`) and `AM_IMAGE_PATH_PREFIX` (e.g. `a/1569`). Find the prefix by right-clicking any image on your auction site → Copy image address; the path often includes `/a/NNNN/`.
+2. **image_url is "set" but images don't load** — You must **run Sync Now** after changing env vars. The API now returns full image URLs; no extra env vars are needed. If you still see placeholders, ensure `AM_DOMAIN` is set (used for the image proxy's allowed hosts).
 
 ## 2. Common Issues
 

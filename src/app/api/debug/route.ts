@@ -82,8 +82,7 @@ export async function GET() {
     })),
     env: {
       AM_DOMAIN: process.env.AM_DOMAIN ? "set" : "missing",
-      AM_IMAGE_BASE: process.env.AM_IMAGE_BASE ? "set" : "missing",
-      AM_IMAGE_PATH_PREFIX: process.env.AM_IMAGE_PATH_PREFIX ? "set" : "missing",
+      AM_IMAGE_BASE: process.env.AM_IMAGE_BASE ? "set" : "optional",
     },
   });
 }
