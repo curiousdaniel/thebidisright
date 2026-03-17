@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { AMItem } from "@/types/auction";
 import { formatPrice } from "@/lib/utils";
-import { getItemImageUrl } from "@/lib/image-url";
+import { getItemImageUrl, getItemImageProxyUrl } from "@/lib/image-url";
+import { useDemoMode } from "@/contexts/DemoModeContext";
 import AuctionImage from "./AuctionImage";
 import { Card } from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
@@ -23,20 +24,22 @@ export default function LotCard({
   predictionStatus = "none",
   predictionCount = 0,
 }: LotCardProps) {
+  const demo = useDemoMode();
   const statusBadge = {
     locked: { label: "Locked", variant: "gold" as const, icon: "🔒" },
     draft: { label: "Draft", variant: "blue" as const, icon: "✏️" },
     none: { label: "Not Yet", variant: "default" as const, icon: "⏳" },
   }[predictionStatus];
 
-  const proxyUrl = getItemImageUrl(item.image_url);
+  const proxyUrl = getItemImageProxyUrl(item.image_url);
+  const hasImage = getItemImageUrl(item.image_url) || item.image_url;
 
   return (
-    <Link href={`/lot/${item.am_item_id}`}>
+    <Link href={demo?.demoHref(`/lot/${item.am_item_id}`) ?? `/lot/${item.am_item_id}`}>
       <Card className="group hover:border-[#D4A843]/50 transition-all duration-300 hover:shadow-lg hover:shadow-[#D4A843]/5">
         {/* Image */}
         <div className="relative aspect-[4/3] bg-[#0A0A0F] overflow-hidden">
-          {proxyUrl || item.image_url ? (
+          {hasImage ? (
             <AuctionImage
               imageUrl={item.image_url}
               alt={item.title}

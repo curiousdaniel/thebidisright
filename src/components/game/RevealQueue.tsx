@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { RevealItem } from "@/types/game";
 import RevealAnimation from "./RevealAnimation";
-import { getItemImageUrl } from "@/lib/image-url";
+import { getItemImageUrl, getItemImageProxyUrl } from "@/lib/image-url";
 import Button from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { formatPrice } from "@/lib/utils";
@@ -38,7 +38,7 @@ export default function RevealQueue({ reveals }: RevealQueueProps) {
       <RevealAnimation
         itemTitle={current.item.title}
         imageUrl={current.item.image_url}
-        proxyUrl={getItemImageUrl(current.item.image_url)}
+        proxyUrl={getItemImageProxyUrl(current.item.image_url) ?? ""}
         predictedPrice={current.result.predicted_price}
         hammerPrice={current.result.hammer_price}
         accuracyTier={current.result.accuracy_tier}

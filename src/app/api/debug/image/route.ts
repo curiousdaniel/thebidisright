@@ -38,7 +38,11 @@ export async function GET(req: NextRequest) {
       allowedHost.endsWith("." + host)
   );
 
-  const allowCdn = host.endsWith(".cloudfront.net") || host.endsWith(".amazonaws.com");
+  const allowCdn =
+    host.endsWith(".cloudfront.net") ||
+    host.endsWith(".amazonaws.com") ||
+    host.endsWith(".auctionmethod.com") ||
+    host === "auctionmethod.com";
   if (!isAllowed && !allowCdn) {
     if (allowedHosts.length === 0) {
       return NextResponse.json({ error: "AM_DOMAIN or AM_IMAGE_BASE not configured" });

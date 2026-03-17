@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDemoMode } from "@/contexts/DemoModeContext";
 
 interface UsePredictionOptions {
   onSuccess?: (action: string) => void;
@@ -10,10 +11,22 @@ interface UsePredictionOptions {
 export function usePrediction(options?: UsePredictionOptions) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const demo = useDemoMode();
 
-  const submitPrediction = async (itemId: number, predictedPrice: number) => {
+  const submitPrediction = async (
+    itemId: number,
+    predictedPrice: number,
+    amAuctionId?: number
+  ) => {
     setLoading(true);
     setError(null);
+
+    if (demo?.isDemoMode) {
+      demo.addDemoPrediction(itemId, predictedPrice, amAuctionId ?? 0);
+      setLoading(false);
+      options?.onSuccess?.("created");
+      return true;
+    }
 
     try {
       const res = await fetch("/api/predictions", {

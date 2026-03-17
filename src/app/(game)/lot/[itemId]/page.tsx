@@ -14,14 +14,16 @@ import Badge from "@/components/ui/Badge";
 import AuctionImage from "@/components/game/AuctionImage";
 import { Card, CardContent } from "@/components/ui/Card";
 import { usePrediction } from "@/hooks/usePrediction";
+import { useDemoMode } from "@/contexts/DemoModeContext";
 import { formatPrice } from "@/lib/utils";
-import { getItemImageUrl } from "@/lib/image-url";
+import { getItemImageUrl, getItemImageProxyUrl } from "@/lib/image-url";
 import { calculateCrowdStats } from "@/lib/crowd-stats";
 import { ArrowLeft, ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function LotDetailPage() {
   const params = useParams();
   const itemId = Number(params.itemId);
+  const demo = useDemoMode();
   const [item, setItem] = useState<AMItem | null>(null);
   const [auctionTitle, setAuctionTitle] = useState("");
   const [auctionEligible, setAuctionEligible] = useState(true);
@@ -64,37 +66,58 @@ export default function LotDetailPage() {
         }
       }
 
-      // Get crowd stats
-      const { data: predictions } = await supabase
-        .from("predictions")
-        .select("predicted_price")
-        .eq("am_item_id", itemId);
+      if (demo?.isDemoMode) {
+        const demoPred = demo.getDemoPrediction(itemId);
+        if (demoPred) {
+          setMyPrediction(demoPred.predictedPrice);
+          setIsLocked(true);
+        }
+        const res = await fetch(
+          `/api/operator/appraisal?scope=lot&itemId=${itemId}&demo=true`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setCrowdStats({
+            median: data.crowd_median ?? 0,
+            mean: data.crowd_mean ?? 0,
+            min: data.prediction_min ?? 0,
+            max: data.prediction_max ?? 0,
+            std_dev: data.std_deviation ?? 0,
+            count: data.prediction_count ?? 0,
+            confidence_score: data.confidence_score ?? 0,
+          });
+        }
+      } else {
+        const { data: predictions } = await supabase
+          .from("predictions")
+          .select("predicted_price")
+          .eq("am_item_id", itemId);
 
-      if (predictions && predictions.length > 0) {
-        const prices = predictions.map((p: { predicted_price: number }) => p.predicted_price);
-        setCrowdStats(calculateCrowdStats(prices));
-      }
+        if (predictions && predictions.length > 0) {
+          const prices = predictions.map((p: { predicted_price: number }) => p.predicted_price);
+          setCrowdStats(calculateCrowdStats(prices));
+        }
 
-      // Get my prediction
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: player } = await supabase
-          .from("players")
-          .select("id")
-          .eq("supabase_auth_id", user.id)
-          .single();
-
-        if (player) {
-          const { data: myPred } = await supabase
-            .from("predictions")
-            .select("predicted_price")
-            .eq("player_id", player.id)
-            .eq("am_item_id", itemId)
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: player } = await supabase
+            .from("players")
+            .select("id")
+            .eq("supabase_auth_id", user.id)
             .single();
 
-          if (myPred) {
-            setMyPrediction(myPred.predicted_price);
-            setIsLocked(true);
+          if (player) {
+            const { data: myPred } = await supabase
+              .from("predictions")
+              .select("predicted_price")
+              .eq("player_id", player.id)
+              .eq("am_item_id", itemId)
+              .single();
+
+            if (myPred) {
+              setMyPrediction(myPred.predicted_price);
+              setIsLocked(true);
+            }
           }
         }
       }
@@ -103,7 +126,8 @@ export default function LotDetailPage() {
     };
 
     fetchData();
-  }, [itemId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- demo is from context, fetchData reads current value
+  }, [itemId, demo?.isDemoMode]);
 
   if (loading) {
     return (
@@ -131,8 +155,11 @@ export default function LotDetailPage() {
     : item.image_url
     ? [item.image_url]
     : [];
-  const images = rawImages
+  const displayUrls = rawImages
     .map((url) => getItemImageUrl(url))
+    .filter((url): url is string => url != null);
+  const proxyUrls = rawImages
+    .map((url) => getItemImageProxyUrl(url))
     .filter((url): url is string => url != null);
 
   const maxPrice = Math.max((item.starting_bid || 100) * 3, 100);
@@ -142,7 +169,7 @@ export default function LotDetailPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
-          href="/browse"
+          href={demo?.demoHref("/browse") ?? "/browse"}
           className="text-[#8888A0] hover:text-[#F1F1F5] transition-colors"
         >
           <ArrowLeft size={20} />
@@ -163,20 +190,20 @@ export default function LotDetailPage() {
         <div className="lg:col-span-3 space-y-4">
           {/* Image gallery */}
           <div className="relative aspect-[4/3] bg-[#141420] rounded-xl overflow-hidden border border-[#2A2A40]">
-            {images.length > 0 ? (
+            {displayUrls.length > 0 ? (
               <>
                 <AuctionImage
                   imageUrl={rawImages[activeImage]}
                   alt={item.title}
-                  proxyUrl={images[activeImage]}
+                  proxyUrl={proxyUrls[activeImage] ?? ""}
                   className="w-full h-full object-contain"
                 />
-                {images.length > 1 && (
+                {displayUrls.length > 1 && (
                   <>
                     <button
                       onClick={() =>
                         setActiveImage(
-                          (activeImage - 1 + images.length) % images.length
+                          (activeImage - 1 + displayUrls.length) % displayUrls.length
                         )
                       }
                       className="absolute left-2 top-1/2 -translate-y-1/2 bg-[#0A0A0F]/70 rounded-full p-2 hover:bg-[#0A0A0F] transition-colors"
@@ -185,14 +212,14 @@ export default function LotDetailPage() {
                     </button>
                     <button
                       onClick={() =>
-                        setActiveImage((activeImage + 1) % images.length)
+                        setActiveImage((activeImage + 1) % displayUrls.length)
                       }
                       className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#0A0A0F]/70 rounded-full p-2 hover:bg-[#0A0A0F] transition-colors"
                     >
                       <ChevronRight size={18} className="text-[#F1F1F5]" />
                     </button>
                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-                      {images.map((_, i) => (
+                      {displayUrls.map((_, i) => (
                         <button
                           key={i}
                           onClick={() => setActiveImage(i)}
@@ -270,7 +297,9 @@ export default function LotDetailPage() {
                 maxPrice={maxPrice}
                 currentPrediction={myPrediction}
                 isLocked={isLocked}
-                onSubmit={(price) => submitPrediction(itemId, price)}
+                onSubmit={(price) =>
+                  submitPrediction(itemId, price, item.am_auction_id)
+                }
                 disabled={!auctionEligible || item.status !== "open" || submitting}
               />
 

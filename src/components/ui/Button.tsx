@@ -14,15 +14,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0A0A0F] disabled:opacity-50 disabled:cursor-not-allowed",
+          "inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
           {
-            "bg-[#D4A843] text-[#0A0A0F] hover:bg-[#F0D78C] focus:ring-[#D4A843]":
-              variant === "primary",
-            "bg-[#1E1E30] text-[#F1F1F5] border border-[#2A2A40] hover:bg-[#2A2A40] focus:ring-[#2A2A40]":
-              variant === "secondary",
-            "text-[#8888A0] hover:text-[#F1F1F5] hover:bg-[#1E1E30] focus:ring-[#2A2A40]":
-              variant === "ghost",
-            "bg-red-500/20 text-[#F87171] border border-red-500/30 hover:bg-red-500/30 focus:ring-red-500":
+            "hover:opacity-90": variant === "primary" || variant === "ghost",
+            "border hover:opacity-90": variant === "secondary",
+            "bg-red-500/20 border border-red-500/30 hover:bg-red-500/30 focus:ring-red-500":
               variant === "danger",
           },
           {
@@ -32,6 +28,15 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           },
           className
         )}
+        style={
+          variant === "primary"
+            ? { backgroundColor: "var(--gold)", color: "var(--background)" }
+            : variant === "secondary"
+              ? { backgroundColor: "var(--surface-hover)", color: "var(--text-primary)", borderColor: "var(--border)" }
+              : variant === "ghost"
+                ? { color: "var(--text-secondary)" }
+                : undefined
+        }
         {...props}
       >
         {children}

@@ -5,9 +5,11 @@ import { createClient } from "@/lib/supabase/client";
 import { AMItem } from "@/types/auction";
 import QuickPlayRound from "@/components/game/QuickPlayRound";
 import Button from "@/components/ui/Button";
+import { useDemoMode } from "@/contexts/DemoModeContext";
 import { Zap, RefreshCw } from "lucide-react";
 
 export default function QuickPlayPage() {
+  const demo = useDemoMode();
   const [items, setItems] = useState<AMItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [started, setStarted] = useState(false);
@@ -56,6 +58,18 @@ export default function QuickPlayPage() {
   const handleComplete = async (
     predictions: Array<{ itemId: number; price: number }>
   ) => {
+    if (demo?.isDemoMode) {
+      for (const pred of predictions) {
+        const item = items.find((i) => i.am_item_id === pred.itemId);
+        demo.addDemoPrediction(
+          pred.itemId,
+          pred.price,
+          item?.am_auction_id ?? 0
+        );
+      }
+      setCompleted(true);
+      return;
+    }
     for (const pred of predictions) {
       await fetch("/api/predictions", {
         method: "POST",

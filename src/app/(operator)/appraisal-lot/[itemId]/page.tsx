@@ -7,18 +7,20 @@ import LotAppraisalComponent from "@/components/operator/LotAppraisal";
 import PredictionChart from "@/components/operator/PredictionChart";
 import { LotAppraisalData } from "@/types/operator";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { useDemoMode } from "@/contexts/DemoModeContext";
 import { ArrowLeft } from "lucide-react";
 
 export default function OperatorLotPage() {
   const params = useParams();
   const itemId = params.itemId as string;
+  const demo = useDemoMode();
   const [data, setData] = useState<(LotAppraisalData & { predictions: number[] }) | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await fetch(
-          `/api/operator/appraisal?scope=lot&itemId=${itemId}`
+          `/api/operator/appraisal?scope=lot&itemId=${itemId}${demo?.demoParam ?? ""}`
         );
         if (res.ok) {
           setData(await res.json());
@@ -27,13 +29,13 @@ export default function OperatorLotPage() {
     };
 
     fetchData();
-  }, [itemId]);
+  }, [itemId, demo?.demoParam]);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link
-          href="/dashboard"
+          href={demo?.demoHref("/dashboard") ?? "/dashboard"}
           className="text-[#8888A0] hover:text-[#F1F1F5] transition-colors"
         >
           <ArrowLeft size={20} />

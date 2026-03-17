@@ -35,7 +35,7 @@ export default function ShareCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-lg font-serif font-bold text-[#D4A843]">
-              BidIQ
+              The Bid is Right
             </span>
           </div>
           <button className="text-[#555570] hover:text-[#D4A843] transition-colors">

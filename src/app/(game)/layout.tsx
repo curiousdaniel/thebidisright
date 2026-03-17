@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useDemoMode } from "@/contexts/DemoModeContext";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import {
   Gavel,
   Search,
@@ -26,36 +28,45 @@ export default function GameLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const demo = useDemoMode();
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--background)" }}>
       {/* Top nav */}
-      <header className="sticky top-0 z-40 bg-[#0A0A0F]/90 backdrop-blur-xl border-b border-[#2A2A40]">
+      <header className="sticky top-0 z-40 backdrop-blur-xl border-b" style={{ backgroundColor: "var(--background)", borderColor: "var(--border)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link
-            href="/"
+            href={demo?.demoHref("/") ?? "/"}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <Gavel className="text-[#D4A843]" size={20} />
-            <span className="text-lg font-serif font-bold text-[#D4A843]">
-              BidIQ
+            <Gavel className="text-[var(--gold)]" size={20} />
+            <span className="text-lg font-serif font-bold" style={{ color: "var(--gold)" }}>
+              The Bid is Right
             </span>
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-3">
+            <ThemeToggle />
+            {demo?.isDemoMode && (
+              <span className="text-xs font-medium px-2 py-1 rounded bg-[var(--gold)]/20 text-[var(--gold)]">
+                Demo Mode
+              </span>
+            )}
+            <nav className="flex items-center gap-1">
             {navItems.map((item) => {
               const isActive =
                 pathname === item.href || pathname.startsWith(item.href + "/");
+              const href = demo?.demoHref(item.href) ?? item.href;
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={href}
                   className={cn(
                     "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                     isActive
-                      ? "text-[#D4A843] bg-[#D4A843]/10"
-                      : "text-[#8888A0] hover:text-[#F1F1F5] hover:bg-[#1E1E30]"
+                      ? "text-[var(--gold)] bg-[var(--gold)]/10"
+                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
                   )}
                 >
                   <item.icon size={16} />
@@ -64,6 +75,7 @@ export default function GameLayout({
               );
             })}
           </nav>
+          </div>
         </div>
       </header>
 
@@ -73,20 +85,21 @@ export default function GameLayout({
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0A0A0F]/95 backdrop-blur-xl border-t border-[#2A2A40] pb-[env(safe-area-inset-bottom)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 backdrop-blur-xl border-t pb-[env(safe-area-inset-bottom)]" style={{ backgroundColor: "var(--background)", borderColor: "var(--border)" }}>
         <div className="flex items-center justify-around py-2">
           {navItems.map((item) => {
             const isActive =
               pathname === item.href || pathname.startsWith(item.href + "/");
+            const href = demo?.demoHref(item.href) ?? item.href;
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={href}
                 className={cn(
                   "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors",
                   isActive
-                    ? "text-[#D4A843]"
-                    : "text-[#555570]"
+                    ? "text-[var(--gold)]"
+                    : "text-[var(--text-muted)]"
                 )}
               >
                 <item.icon size={20} />

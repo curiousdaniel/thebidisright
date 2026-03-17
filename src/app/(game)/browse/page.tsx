@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { AMItem, AMAuction } from "@/types/auction";
 import LotGrid from "@/components/game/LotGrid";
 import Tabs from "@/components/ui/Tabs";
 import Button from "@/components/ui/Button";
+import { useDemoMode } from "@/contexts/DemoModeContext";
 import { Search, Clock, Grid3X3, Flame, RefreshCw } from "lucide-react";
 
 type BrowseTab = "all" | "closing" | "category" | "hot";
@@ -17,6 +18,7 @@ const tabs = [
 ];
 
 export default function BrowsePage() {
+  const demo = useDemoMode();
   const [activeTab, setActiveTab] = useState<BrowseTab>("all");
   const [auctions, setAuctions] = useState<AMAuction[]>([]);
   const [items, setItems] = useState<AMItem[]>([]);
@@ -114,6 +116,20 @@ export default function BrowsePage() {
           item.category?.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : items;
+
+  const demoPredictions = useMemo(() => {
+    if (!demo?.isDemoMode || !demo.demoPredictions) return undefined;
+    const map = new Map<number, { status: "locked" | "draft" | "none" }>();
+    demo.demoPredictions.forEach((_, itemId) => {
+      map.set(itemId, { status: "locked" });
+    });
+    return map;
+  }, [demo?.isDemoMode, demo?.demoPredictions]);
+
+  const demoPredictionCounts = useMemo(() => {
+    if (!demo?.isDemoMode) return undefined;
+    return new Map<number, number>();
+  }, [demo?.isDemoMode]);
 
   return (
     <div className="space-y-6">
@@ -219,7 +235,11 @@ export default function BrowsePage() {
           </p>
         </div>
       ) : (
-        <LotGrid items={filteredItems} />
+        <LotGrid
+          items={filteredItems}
+          predictions={demoPredictions}
+          predictionCounts={demoPredictionCounts}
+        />
       )}
     </div>
   );

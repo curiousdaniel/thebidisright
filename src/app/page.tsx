@@ -1,28 +1,32 @@
 import Link from "next/link";
 import { Gavel, Target, Trophy, Flame, BarChart3, Zap } from "lucide-react";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#0A0A0F]">
+    <div className="min-h-screen" style={{ backgroundColor: "var(--background)" }}>
       {/* Nav */}
-      <nav className="border-b border-[#2A2A40] px-6 py-4">
+      <nav className="border-b px-6 py-4" style={{ borderColor: "var(--border)" }}>
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Gavel className="text-[#D4A843]" size={24} />
-            <span className="text-xl font-serif font-bold text-[#D4A843]">
-              BidIQ
+            <Gavel size={24} style={{ color: "var(--gold)" }} />
+            <span className="text-xl font-serif font-bold" style={{ color: "var(--gold)" }}>
+              The Bid is Right
             </span>
           </div>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <Link
               href="/login"
-              className="text-sm text-[#8888A0] hover:text-[#F1F1F5] transition-colors"
+              className="text-sm transition-colors hover:opacity-90"
+              style={{ color: "var(--text-secondary)" }}
             >
               Sign In
             </Link>
             <Link
               href="/login"
-              className="text-sm bg-[#D4A843] text-[#0A0A0F] px-4 py-2 rounded-lg font-semibold hover:bg-[#F0D78C] transition-colors"
+              className="text-sm px-4 py-2 rounded-lg font-semibold transition-colors hover:opacity-90"
+              style={{ backgroundColor: "var(--gold)", color: "var(--background)" }}
             >
               Play Now
             </Link>
@@ -33,20 +37,20 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="px-6 pt-24 pb-20">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-[#D4A843]/10 border border-[#D4A843]/30 rounded-full px-4 py-1.5 mb-8">
-            <Zap size={14} className="text-[#D4A843]" />
-            <span className="text-sm text-[#D4A843]">
+          <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-8" style={{ backgroundColor: "color-mix(in srgb, var(--gold) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--gold) 30%, transparent)" }}>
+            <Zap size={14} style={{ color: "var(--gold)" }} />
+            <span className="text-sm" style={{ color: "var(--gold)" }}>
               The Auction Appraisal Game
             </span>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-serif font-bold text-[#F1F1F5] leading-tight mb-6">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-serif font-bold leading-tight mb-6" style={{ color: "var(--text-primary)" }}>
             You think you know
             <br />
-            <span className="text-[#D4A843]">what it&apos;s worth?</span>
+            <span style={{ color: "var(--gold)" }}>what it&apos;s worth?</span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-[#8888A0] max-w-2xl mx-auto mb-10">
+          <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-10" style={{ color: "var(--text-secondary)" }}>
             Browse real auction lots. Lock in your price prediction before the
             hammer drops. Earn points, badges, and bragging rights for your
             appraisal accuracy.
@@ -55,14 +59,16 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/browse"
-              className="inline-flex items-center justify-center gap-2 bg-[#D4A843] text-[#0A0A0F] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#F0D78C] transition-all hover:scale-105"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all hover:scale-105"
+              style={{ backgroundColor: "var(--gold)", color: "var(--background)" }}
             >
               <Target size={20} />
               Start Predicting
             </Link>
             <Link
               href="/leaderboard"
-              className="inline-flex items-center justify-center gap-2 bg-[#1E1E30] text-[#F1F1F5] border border-[#2A2A40] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#2A2A40] transition-all"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all border hover:opacity-90"
+              style={{ backgroundColor: "var(--surface-hover)", color: "var(--text-primary)", borderColor: "var(--border)" }}
             >
               <Trophy size={20} />
               View Leaderboard
@@ -72,9 +78,9 @@ export default function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section className="px-6 py-20 border-t border-[#2A2A40]">
+      <section className="px-6 py-20 border-t" style={{ borderColor: "var(--border)" }}>
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-serif font-bold text-center text-[#F1F1F5] mb-16">
+          <h2 className="text-3xl font-serif font-bold text-center mb-16" style={{ color: "var(--text-primary)" }}>
             The Game Loop
           </h2>
 
@@ -113,13 +119,14 @@ export default function LandingPage() {
             ].map((step) => (
               <div
                 key={step.title}
-                className="bg-[#141420] border border-[#2A2A40] rounded-xl p-6 hover:border-[#D4A843]/30 transition-colors"
+                className="rounded-xl p-6 transition-colors"
+                style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
               >
                 <span className="text-3xl mb-4 block">{step.icon}</span>
-                <h3 className="text-lg font-semibold text-[#F1F1F5] mb-2">
+                <h3 className="text-lg font-semibold mb-2" style={{ color: "var(--text-primary)" }}>
                   {step.title}
                 </h3>
-                <p className="text-sm text-[#8888A0]">{step.desc}</p>
+                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{step.desc}</p>
               </div>
             ))}
           </div>
@@ -127,12 +134,12 @@ export default function LandingPage() {
       </section>
 
       {/* Accuracy tiers */}
-      <section className="px-6 py-20 border-t border-[#2A2A40]">
+      <section className="px-6 py-20 border-t" style={{ borderColor: "var(--border)" }}>
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-serif font-bold text-[#F1F1F5] mb-4">
+          <h2 className="text-3xl font-serif font-bold mb-4" style={{ color: "var(--text-primary)" }}>
             How Close Can You Get?
           </h2>
-          <p className="text-[#8888A0] mb-12">
+          <p className="mb-12" style={{ color: "var(--text-secondary)" }}>
             Every prediction is scored on accuracy. The closer you are to the
             hammer price, the more points you earn.
           </p>
@@ -142,20 +149,21 @@ export default function LandingPage() {
               { emoji: "🎯", label: "Bullseye", range: "Within 5%", color: "border-emerald-500/30 bg-emerald-500/5" },
               { emoji: "🔥", label: "Hot Read", range: "Within 10%", color: "border-amber-500/30 bg-amber-500/5" },
               { emoji: "👍", label: "Good Eye", range: "Within 20%", color: "border-blue-500/30 bg-blue-500/5" },
-              { emoji: "😬", label: "Swing and a Miss", range: "Within 50%", color: "border-[#2A2A40] bg-[#141420]" },
+              { emoji: "😬", label: "Swing and a Miss", range: "Within 50%", color: "" },
               { emoji: "💀", label: "Way Off", range: "Beyond 50%", color: "border-red-500/30 bg-red-500/5" },
             ].map((tier) => (
               <div
                 key={tier.label}
                 className={`flex items-center justify-between px-6 py-4 rounded-xl border ${tier.color}`}
+                style={!tier.color ? { borderColor: "var(--border)", backgroundColor: "var(--surface)" } : undefined}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{tier.emoji}</span>
-                  <span className="font-semibold text-[#F1F1F5]">
+                  <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
                     {tier.label}
                   </span>
                 </div>
-                <span className="text-sm text-[#8888A0]">{tier.range}</span>
+                <span className="text-sm" style={{ color: "var(--text-secondary)" }}>{tier.range}</span>
               </div>
             ))}
           </div>
@@ -163,14 +171,14 @@ export default function LandingPage() {
       </section>
 
       {/* Features for operators */}
-      <section className="px-6 py-20 border-t border-[#2A2A40]">
+      <section className="px-6 py-20 border-t" style={{ borderColor: "var(--border)" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-serif font-bold text-[#F1F1F5] mb-4">
+            <h2 className="text-3xl font-serif font-bold mb-4" style={{ color: "var(--text-primary)" }}>
               For Auction Operators
             </h2>
-            <p className="text-[#8888A0] max-w-xl mx-auto">
-              BidIQ isn&apos;t just a game — it&apos;s a crowd-sourced appraisal
+            <p className="max-w-xl mx-auto" style={{ color: "var(--text-secondary)" }}>
+              The Bid is Right isn&apos;t just a game — it&apos;s a crowd-sourced appraisal
               engine for your inventory.
             </p>
           </div>
@@ -195,13 +203,14 @@ export default function LandingPage() {
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="bg-[#141420] border border-[#2A2A40] rounded-xl p-6"
+                className="rounded-xl p-6"
+                style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
               >
-                <div className="text-[#D4A843] mb-4">{feature.icon}</div>
-                <h3 className="text-lg font-semibold text-[#F1F1F5] mb-2">
+                <div className="mb-4" style={{ color: "var(--gold)" }}>{feature.icon}</div>
+                <h3 className="text-lg font-semibold mb-2" style={{ color: "var(--text-primary)" }}>
                   {feature.title}
                 </h3>
-                <p className="text-sm text-[#8888A0]">{feature.desc}</p>
+                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{feature.desc}</p>
               </div>
             ))}
           </div>
@@ -209,32 +218,33 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="px-6 py-24 border-t border-[#2A2A40]">
+      <section className="px-6 py-24 border-t" style={{ borderColor: "var(--border)" }}>
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-4xl font-serif font-bold text-[#F1F1F5] mb-4">
+          <h2 className="text-4xl font-serif font-bold mb-4" style={{ color: "var(--text-primary)" }}>
             Ready to prove your expertise?
           </h2>
-          <p className="text-[#8888A0] mb-8">
+          <p className="mb-8" style={{ color: "var(--text-secondary)" }}>
             Every lot is a wager on your knowledge. Start predicting now.
           </p>
           <Link
             href="/browse"
-            className="inline-flex items-center gap-2 bg-[#D4A843] text-[#0A0A0F] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#F0D78C] transition-all hover:scale-105"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all hover:scale-105"
+            style={{ backgroundColor: "var(--gold)", color: "var(--background)" }}
           >
             <Gavel size={20} />
-            Enter BidIQ
+            Enter The Bid is Right
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[#2A2A40] px-6 py-8">
+      <footer className="border-t px-6 py-8" style={{ borderColor: "var(--border)" }}>
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <Gavel className="text-[#D4A843]" size={16} />
-            <span className="text-sm font-serif text-[#D4A843]">BidIQ</span>
+            <Gavel size={16} style={{ color: "var(--gold)" }} />
+            <span className="text-sm font-serif" style={{ color: "var(--gold)" }}>The Bid is Right</span>
           </div>
-          <p className="text-xs text-[#555570]">
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
             Where Every Lot Is a Wager on Your Expertise
           </p>
         </div>

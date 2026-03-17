@@ -11,7 +11,9 @@ interface AuctionImageProps {
 }
 
 /**
- * Renders an auction item image. Tries proxy first, falls back to direct URL on error.
+ * Renders an auction item image.
+ * For full URLs: tries direct first (CDNs allow embedding), falls back to proxy on error.
+ * For path-based: uses proxy only.
  */
 export default function AuctionImage({
   imageUrl,
@@ -19,10 +21,14 @@ export default function AuctionImage({
   className = "",
   proxyUrl,
 }: AuctionImageProps) {
-  const [useDirect, setUseDirect] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
   const [errored, setErrored] = useState(false);
 
-  if (!imageUrl || !proxyUrl) {
+  const isFullUrl = typeof imageUrl === "string" && imageUrl.startsWith("http");
+  const primaryUrl = isFullUrl ? imageUrl : proxyUrl;
+  const fallbackUrl = isFullUrl ? proxyUrl : null;
+
+  if (!imageUrl && !proxyUrl) {
     return (
       <div className={`flex items-center justify-center bg-[#0A0A0F] ${className}`}>
         <ImageIcon size={48} className="text-[#2A2A40]" />
@@ -30,7 +36,7 @@ export default function AuctionImage({
     );
   }
 
-  const src = useDirect ? imageUrl : proxyUrl;
+  const src = useFallback && fallbackUrl ? fallbackUrl : primaryUrl;
 
   return (
     <>
@@ -41,8 +47,8 @@ export default function AuctionImage({
           className={className}
           loading="lazy"
           onError={() => {
-            if (!useDirect) {
-              setUseDirect(true);
+            if (!useFallback && fallbackUrl) {
+              setUseFallback(true);
             } else {
               setErrored(true);
             }

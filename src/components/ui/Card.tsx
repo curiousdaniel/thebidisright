@@ -2,13 +2,18 @@ import { cn } from "@/lib/utils";
 import { HTMLAttributes, forwardRef } from "react";
 
 const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
+  ({ className, style, ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
-        "bg-[#141420] border border-[#2A2A40] rounded-xl overflow-hidden",
+        "rounded-xl overflow-hidden",
         className
       )}
+      style={{
+        backgroundColor: "var(--surface)",
+        border: "1px solid var(--border)",
+        ...style,
+      }}
       {...props}
     />
   )

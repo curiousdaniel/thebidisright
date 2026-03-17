@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getRankForPoints } from "@/lib/ranks";
+import { generateFakeLeaderboardEntries } from "@/lib/demo-data";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +9,16 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const view = searchParams.get("view") || "alltime";
   const limit = Math.min(Number(searchParams.get("limit") || 50), 100);
+  const isDemo = searchParams.get("demo") === "true";
+
+  if (isDemo) {
+    const validView =
+      view === "alltime" || view === "weekly" || view === "accuracy" || view === "streak"
+        ? view
+        : "alltime";
+    const entries = generateFakeLeaderboardEntries(validView, limit);
+    return NextResponse.json({ entries });
+  }
 
   const supabase = createAdminClient();
 

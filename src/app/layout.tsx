@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { DemoModeProvider } from "@/contexts/DemoModeContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 export const metadata: Metadata = {
-  title: "BidIQ — The Auction Appraisal Game",
+  title: "The Bid is Right — The Auction Appraisal Game",
   description:
     "Think you know what it's worth? Lock in your prediction, wait for the hammer, and prove your expertise.",
   keywords: ["auction", "appraisal", "game", "prediction", "bidding"],
@@ -14,9 +16,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-[#0A0A0F] text-[#F1F1F5] antialiased">
-        {children}
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var t=localStorage.getItem('thebidisright_theme');document.documentElement.classList.remove('light','dark');document.documentElement.classList.add(t==='light'?'light':'dark');})();`,
+          }}
+        />
+      </head>
+      <body className="min-h-screen antialiased" style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}>
+        <ThemeProvider>
+          <DemoModeProvider>{children}</DemoModeProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

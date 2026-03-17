@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Allow self-signed certs for AM image fetch
-if (typeof process !== "undefined") process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
 const AM_DOMAIN = (process.env.AM_DOMAIN || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
 const AM_IMAGE_BASE = (process.env.AM_IMAGE_BASE || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
 
 export const dynamic = "force-dynamic";
 
+/** Hosts allowed for image proxy (AuctionMethod API returns full URLs from various CDNs) */
+function isHostAllowed(host: string): boolean {
+  const h = host.toLowerCase();
+  const fromEnv = [AM_DOMAIN, AM_IMAGE_BASE].filter(Boolean).map((x) => x.toLowerCase());
+  if (fromEnv.some((a) => h === a || h.endsWith("." + a) || a.endsWith("." + h))) return true;
+  if (h.endsWith(".cloudfront.net") || h.endsWith(".amazonaws.com")) return true;
+  if (h.endsWith(".auctionmethod.com") || h === "auctionmethod.com") return true;
+  return false;
+}
+
 /**
- * Proxies images from the AuctionMethod domain.
- * Use when direct image loading fails (CORS, referrer, etc.).
+ * Proxies images from AuctionMethod / CDN domains.
  * GET /api/image?url=<encoded_full_url>
  */
 export async function GET(req: NextRequest) {
@@ -31,20 +37,9 @@ export async function GET(req: NextRequest) {
   }
 
   const parsed = new URL(imageUrl);
-  const host = parsed.hostname.toLowerCase();
-  const allowedHosts = [AM_DOMAIN, AM_IMAGE_BASE].filter(Boolean).map((h) => h.toLowerCase());
-  const isAllowed =
-    allowedHosts.some(
-      (allowedHost) =>
-        host === allowedHost ||
-        host.endsWith("." + allowedHost) ||
-        allowedHost.endsWith("." + host)
-    ) ||
-    host.endsWith(".cloudfront.net") ||
-    host.endsWith(".amazonaws.com");
-  if (!isAllowed) {
+  if (!isHostAllowed(parsed.hostname)) {
     return NextResponse.json(
-      { error: "URL not allowed. Set AM_DOMAIN or AM_IMAGE_BASE." },
+      { error: "URL host not allowed", host: parsed.hostname },
       { status: 403 }
     );
   }

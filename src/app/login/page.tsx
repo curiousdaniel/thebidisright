@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Gavel } from "lucide-react";
 import Button from "@/components/ui/Button";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -55,16 +56,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 relative" style={{ backgroundColor: "var(--background)" }}>
       <div className="w-full max-w-md">
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Gavel className="text-[#D4A843]" size={32} />
-            <span className="text-3xl font-serif font-bold text-[#D4A843]">
-              BidIQ
+            <Gavel size={32} style={{ color: "var(--gold)" }} />
+            <span className="text-3xl font-serif font-bold" style={{ color: "var(--gold)" }}>
+              The Bid is Right
             </span>
           </div>
-          <p className="text-[#8888A0]">
+          <p style={{ color: "var(--text-secondary)" }}>
             {isSignUp
               ? "Create your account and start predicting"
               : "Sign in to your account"}
@@ -73,11 +77,12 @@ export default function LoginPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-[#141420] border border-[#2A2A40] rounded-2xl p-6 space-y-5"
+          className="rounded-2xl p-6 space-y-5"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
         >
           {isSignUp && (
             <div>
-              <label className="text-sm text-[#8888A0] block mb-1.5">
+              <label className="text-sm text-[var(--text-secondary)] block mb-1.5">
                 Display Name
               </label>
               <input
@@ -85,14 +90,15 @@ export default function LoginPage() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Your appraiser alias"
-                className="w-full bg-[#0A0A0F] border border-[#2A2A40] rounded-lg px-4 py-3 text-[#F1F1F5] placeholder:text-[#555570] focus:outline-none focus:border-[#D4A843] transition-colors"
+                className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors"
+                style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
                 required
               />
             </div>
           )}
 
           <div>
-            <label className="text-sm text-[#8888A0] block mb-1.5">
+            <label className="text-sm text-[var(--text-secondary)] block mb-1.5">
               Email
             </label>
             <input
@@ -100,13 +106,14 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full bg-[#0A0A0F] border border-[#2A2A40] rounded-lg px-4 py-3 text-[#F1F1F5] placeholder:text-[#555570] focus:outline-none focus:border-[#D4A843] transition-colors"
+              className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors"
+              style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
               required
             />
           </div>
 
           <div>
-            <label className="text-sm text-[#8888A0] block mb-1.5">
+            <label className="text-sm text-[var(--text-secondary)] block mb-1.5">
               Password
             </label>
             <input
@@ -114,7 +121,8 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-[#0A0A0F] border border-[#2A2A40] rounded-lg px-4 py-3 text-[#F1F1F5] placeholder:text-[#555570] focus:outline-none focus:border-[#D4A843] transition-colors"
+              className="w-full rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors"
+              style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
               required
               minLength={6}
             />
@@ -139,7 +147,7 @@ export default function LoginPage() {
               : "Sign In"}
           </Button>
 
-          <p className="text-center text-sm text-[#8888A0]">
+          <p className="text-center text-sm text-[var(--text-secondary)]">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <button
               type="button"
@@ -147,7 +155,8 @@ export default function LoginPage() {
                 setIsSignUp(!isSignUp);
                 setError("");
               }}
-              className="text-[#D4A843] hover:text-[#F0D78C] transition-colors"
+              className="transition-colors hover:opacity-80"
+              style={{ color: "var(--gold)" }}
             >
               {isSignUp ? "Sign In" : "Sign Up"}
             </button>

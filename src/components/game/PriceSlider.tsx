@@ -98,7 +98,7 @@ export default function PriceSlider({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-[#8888A0]">Your BidIQ Call</span>
+        <span className="text-sm text-[#8888A0]">Your Call</span>
         <button
           onClick={() => !locked && setShowInput(!showInput)}
           className="text-sm text-[#D4A843] hover:text-[#F0D78C] transition-colors"

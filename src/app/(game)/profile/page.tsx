@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePlayerStats } from "@/hooks/usePlayerStats";
+import { useDemoMode } from "@/contexts/DemoModeContext";
 import { createClient } from "@/lib/supabase/client";
 import { Badge as BadgeType, PlayerBadge } from "@/types/game";
 import Avatar from "@/components/ui/Avatar";
@@ -15,6 +16,7 @@ import { getRankForPoints } from "@/lib/ranks";
 import { LogOut, Award, Target, BarChart3, Calendar } from "lucide-react";
 
 export default function ProfilePage() {
+  const demo = useDemoMode();
   const { player, loading, isAuthenticated } = usePlayerStats();
   const [badges, setBadges] = useState<{
     earned: Array<PlayerBadge & { badges: BadgeType }>;
@@ -52,6 +54,58 @@ export default function ProfilePage() {
   }
 
   if (!isAuthenticated || !player) {
+    if (demo?.isDemoMode) {
+      const demoPoints = 1250;
+      const demoRank = getRankForPoints(demoPoints);
+      return (
+        <div className="max-w-2xl mx-auto space-y-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <Avatar src={null} name="Demo User" size="lg" />
+                <div>
+                  <h1 className="text-xl font-bold text-[#F1F1F5]">
+                    Demo User
+                  </h1>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-lg">{demoRank.icon}</span>
+                    <span className="text-sm text-[#D4A843] font-medium">
+                      {demoRank.title}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#555570] mt-2">
+                    Demo mode — your predictions and stats are not saved
+                  </p>
+                </div>
+              </div>
+              <RankProgress totalPoints={demoPoints} className="mt-6" />
+            </CardContent>
+          </Card>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: "Total Points", value: formatNumber(demoPoints), icon: <BarChart3 size={16} /> },
+              { label: "Predictions", value: formatNumber(demo.demoPredictions?.size ?? 0), icon: <Target size={16} /> },
+              { label: "Avg Accuracy", value: "—", icon: <Award size={16} /> },
+              { label: "Member Since", value: "—", icon: <Calendar size={16} /> },
+            ].map((stat) => (
+              <Card key={stat.label}>
+                <CardContent className="p-4 text-center">
+                  <div className="text-[#D4A843] flex justify-center mb-2">
+                    {stat.icon}
+                  </div>
+                  <p className="font-mono font-bold text-lg text-[#F1F1F5]">
+                    {stat.value}
+                  </p>
+                  <p className="text-[10px] text-[#555570] uppercase mt-0.5">
+                    {stat.label}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="max-w-sm mx-auto text-center py-20 space-y-4">
         <span className="text-5xl">👋</span>

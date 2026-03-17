@@ -9,9 +9,11 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { AMAuction } from "@/types/auction";
+import { useDemoMode } from "@/contexts/DemoModeContext";
 import { ChevronRight, RefreshCw } from "lucide-react";
 
 export default function DashboardPage() {
+  const demo = useDemoMode();
   const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
   const [auctions, setAuctions] = useState<AMAuction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +23,9 @@ export default function DashboardPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/operator/appraisal?scope=portfolio");
+      const res = await fetch(
+        `/api/operator/appraisal?scope=portfolio${demo?.demoParam ?? ""}`
+      );
       if (res.ok) {
         const data = await res.json();
         setPortfolioData(data);
@@ -42,7 +46,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [demo?.isDemoMode]);
 
   const handleSyncNow = async () => {
     setSyncing(true);
@@ -139,7 +143,7 @@ export default function DashboardPage() {
                 {auctions.map((auction) => (
                   <Link
                     key={auction.am_auction_id}
-                    href={`/auction/${auction.am_auction_id}`}
+                    href={demo?.demoHref(`/auction/${auction.am_auction_id}`) ?? `/auction/${auction.am_auction_id}`}
                     className="flex items-center justify-between p-3 rounded-lg hover:bg-[#1E1E30] transition-colors group"
                   >
                     <div>
