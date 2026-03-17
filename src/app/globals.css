@@ -17,20 +17,22 @@
   --text-muted: #555570;
   --gold: #D4A843;
   --gold-light: #F0D78C;
+  --gold-foreground: #0A0A0F;
 }
 
-/* Light mode */
+/* Light mode - WCAG AA contrast, warm neutral palette */
 .light {
-  --background: #FAFAFC;
-  --foreground: #1A1A24;
+  --background: #F5F5F7;
+  --foreground: #0D0D12;
   --surface: #FFFFFF;
-  --surface-hover: #F0F0F5;
-  --border: #E5E5EC;
-  --text-primary: #1A1A24;
-  --text-secondary: #5A5A6E;
-  --text-muted: #8A8A9E;
-  --gold: #B8860B;
-  --gold-light: #D4A843;
+  --surface-hover: #E8E8ED;
+  --border: #D1D5DB;
+  --text-primary: #0D0D12;
+  --text-secondary: #374151;
+  --text-muted: #6B7280;
+  --gold: #92400E;
+  --gold-light: #B45309;
+  --gold-foreground: #FEF3C7;
 }
 
 body {

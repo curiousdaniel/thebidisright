@@ -27,9 +27,10 @@ export default function Tabs({ tabs, defaultTab, onTabChange, className }: TabsP
   return (
     <div
       className={cn(
-        "flex gap-1 bg-[#0A0A0F] border border-[#2A2A40] rounded-lg p-1 overflow-x-auto",
+        "flex gap-1 rounded-lg p-1 overflow-x-auto",
         className
       )}
+      style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
     >
       {tabs.map((tab) => (
         <button
@@ -38,9 +39,10 @@ export default function Tabs({ tabs, defaultTab, onTabChange, className }: TabsP
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap",
             active === tab.id
-              ? "bg-[#1E1E30] text-[#D4A843] shadow-sm"
-              : "text-[#8888A0] hover:text-[#F1F1F5]"
+              ? "shadow-sm"
+              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           )}
+          style={active === tab.id ? { backgroundColor: "var(--surface-hover)", color: "var(--gold)" } : undefined}
         >
           {tab.icon}
           {tab.label}

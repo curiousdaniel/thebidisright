@@ -36,9 +36,9 @@ export default function LotCard({
 
   return (
     <Link href={demo?.demoHref(`/lot/${item.am_item_id}`) ?? `/lot/${item.am_item_id}`}>
-      <Card className="group hover:border-[#D4A843]/50 transition-all duration-300 hover:shadow-lg hover:shadow-[#D4A843]/5">
+      <Card className="group hover:border-[var(--gold)]/50 transition-all duration-300 hover:shadow-lg hover:shadow-[var(--gold)]/10">
         {/* Image */}
-        <div className="relative aspect-[4/3] bg-[#0A0A0F] overflow-hidden">
+        <div className="relative aspect-[4/3] overflow-hidden" style={{ backgroundColor: "var(--background)" }}>
           {hasImage ? (
             <AuctionImage
               imageUrl={item.image_url}
@@ -48,7 +48,7 @@ export default function LotCard({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <ImageIcon size={48} className="text-[#2A2A40]" />
+              <ImageIcon size={48} className="text-[var(--border)]" />
             </div>
           )}
 

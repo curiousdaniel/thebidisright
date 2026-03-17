@@ -135,10 +135,10 @@ export default function BrowsePage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-[#F1F1F5]">
+          <h1 className="text-3xl font-serif font-bold text-[var(--text-primary)]">
             Browse Lots
           </h1>
-          <p className="text-[#8888A0] mt-1">
+          <p className="text-[var(--text-secondary)] mt-1">
             Find lots to appraise and lock in your predictions
           </p>
         </div>
@@ -163,14 +163,15 @@ export default function BrowsePage() {
       <div className="relative">
         <Search
           size={18}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555570]"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
         />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search lots by title or category..."
-          className="w-full bg-[#141420] border border-[#2A2A40] rounded-xl pl-10 pr-4 py-3 text-[#F1F1F5] placeholder:text-[#555570] focus:outline-none focus:border-[#D4A843] transition-colors"
+          className="w-full rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
         />
       </div>
 
@@ -188,8 +189,8 @@ export default function BrowsePage() {
             onClick={() => setSelectedAuction(null)}
             className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
               !selectedAuction
-                ? "bg-[#D4A843] text-[#0A0A0F] font-semibold"
-                : "bg-[#1E1E30] text-[#8888A0] hover:text-[#F1F1F5]"
+                ? "bg-[var(--gold)] text-[var(--gold-foreground)] font-semibold"
+                : "bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
           >
             All
@@ -200,8 +201,8 @@ export default function BrowsePage() {
               onClick={() => setSelectedAuction(auction.am_auction_id)}
               className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
                 selectedAuction === auction.am_auction_id
-                  ? "bg-[#D4A843] text-[#0A0A0F] font-semibold"
-                  : "bg-[#1E1E30] text-[#8888A0] hover:text-[#F1F1F5]"
+                  ? "bg-[var(--gold)] text-[var(--gold-foreground)] font-semibold"
+                  : "bg-[var(--surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               {auction.title}
@@ -216,12 +217,13 @@ export default function BrowsePage() {
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="bg-[#141420] border border-[#2A2A40] rounded-xl overflow-hidden animate-pulse"
+              className="rounded-xl overflow-hidden animate-pulse"
+              style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
             >
-              <div className="aspect-[4/3] bg-[#1E1E30]" />
+              <div className="aspect-[4/3] bg-[var(--surface-hover)]" />
               <div className="p-4 space-y-2">
-                <div className="h-4 bg-[#1E1E30] rounded w-3/4" />
-                <div className="h-3 bg-[#1E1E30] rounded w-1/2" />
+                <div className="h-4 bg-[var(--surface-hover)] rounded w-3/4" />
+                <div className="h-3 bg-[var(--surface-hover)] rounded w-1/2" />
               </div>
             </div>
           ))}
@@ -229,8 +231,8 @@ export default function BrowsePage() {
       ) : filteredItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <span className="text-5xl mb-4">🔍</span>
-          <p className="text-lg font-medium text-[#555570]">No lots found</p>
-          <p className="text-sm text-[#555570] mt-1">
+          <p className="text-lg font-medium text-[var(--text-muted)]">No lots found</p>
+          <p className="text-sm text-[var(--text-muted)] mt-1">
             Use the Sync Now button above to load auction data from AuctionMethod.
           </p>
         </div>
